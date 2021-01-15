@@ -14,13 +14,13 @@
 KnobPanel::KnobPanel()
 {
     
-    for( auto* knob : knobs )
-    {
-        knob->setSliderStyle( juce::Slider::SliderStyle::Rotary );
-        knob->setTextBoxStyle( juce::Slider::TextBoxBelow, false, 0, 0 );
-        knob->setAlwaysOnTop( true );
-        addAndMakeVisible( knob );
-    }
+//    for( auto* knob : knobs )
+//    {
+//        knob->setSliderStyle( juce::Slider::SliderStyle::Rotary );
+//        knob->setTextBoxStyle( juce::Slider::TextBoxBelow, false, 0, 0 );
+//        knob->setAlwaysOnTop( true );
+//        addAndMakeVisible( knob );
+//    }
 
 }
 
@@ -36,16 +36,16 @@ void KnobPanel::paint( juce::Graphics& g )
 void KnobPanel::resized()
 {
     
-    int heightPos = getHeight() / 9;
-    int widthPos  = static_cast<float>(getWidth()) / static_cast<float>(knobs.size());
-    int i = 1;
-    
-    for( auto* knob : knobs )
-    {
-        knob->setSize( 100, 100 );
-        //DBG( "X: " + std::to_string(widthPos * i) );
-        knob->setTopLeftPosition( (widthPos * i) - 130, heightPos );
-        i++;
-    }
+//    int heightPos = getHeight() / 9;
+//    int widthPos  = static_cast<float>(getWidth()) / static_cast<float>(knobs.size());
+//    int i = 1;
+//    
+//    for( auto* knob : knobs )
+//    {
+//        knob->setSize( 100, 100 );
+//        //DBG( "X: " + std::to_string(widthPos * i) );
+//        knob->setTopLeftPosition( (widthPos * i) - 130, heightPos );
+//        i++;
+//    }
 
 }

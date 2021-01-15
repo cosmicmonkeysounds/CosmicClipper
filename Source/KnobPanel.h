@@ -26,7 +26,6 @@ public:
     void paint( juce::Graphics& ) override;
     void resized() override;
     
-    juce::Slider* inputVolumeKnob         = new juce::Slider( "Input Volume" );
     juce::Slider* distortionThresholdKnob = new juce::Slider( "Distortion Threshold" );
     juce::Slider* distortionCeilingKnob   = new juce::Slider( "Distortion Ceiling" );
     juce::Slider* outputVolumeKnob        = new juce::Slider( "Output Volume" );
@@ -34,7 +33,7 @@ public:
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (KnobPanel)
     
-    juce::OwnedArray<juce::Slider> knobs{ inputVolumeKnob,
+    juce::OwnedArray<juce::Slider> knobs{ 
                                           distortionThresholdKnob,
                                           distortionCeilingKnob,
                                           outputVolumeKnob };
