@@ -4,6 +4,9 @@
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" companyName="Cosmic Monkey Sounds">
   <MAINGROUP id="z3ajxe" name="Cosmic Clipper">
     <GROUP id="{F46DC649-6A62-7737-CFA9-9983EB1946F0}" name="Source">
+      <FILE id="PmN5LP" name="Oscilloscope2D.h" compile="0" resource="0"
+            file="Source/Oscilloscope2D.h"/>
+      <FILE id="HJw8hO" name="RingBuffer.h" compile="0" resource="0" file="Source/RingBuffer.h"/>
       <FILE id="LH7fMv" name="Fifo.h" compile="0" resource="0" file="Source/Fifo.h"/>
       <FILE id="cK1z82" name="KnobPanel.cpp" compile="1" resource="0" file="Source/KnobPanel.cpp"/>
       <FILE id="gp01nS" name="KnobPanel.h" compile="0" resource="0" file="Source/KnobPanel.h"/>
@@ -37,6 +40,7 @@
         <MODULEPATH id="juce_graphics" path="../PFM_CPP/JUCE/modules"/>
         <MODULEPATH id="juce_gui_basics" path="../PFM_CPP/JUCE/modules"/>
         <MODULEPATH id="juce_gui_extra" path="../PFM_CPP/JUCE/modules"/>
+        <MODULEPATH id="juce_opengl" path="../../PFM_CPP/JUCE/modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
   </EXPORTFORMATS>
@@ -55,6 +59,7 @@
     <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_opengl" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
   </MODULES>
   <LIVE_SETTINGS>
     <OSX/>

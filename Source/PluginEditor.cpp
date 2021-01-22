@@ -14,24 +14,27 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
     
-    
     startTimerHz(20);
+        
+    //==============================================================================
+    // GUI Elements
+    //==============================================================================
     
-//    addAndMakeVisible( knobPanel );
-//
-//    knobPanel.inputVolumeKnob->onValueChange = [this]()
-//    {
-//        audioProcessor.inputVolume.set( knobPanel.inputVolumeKnob->getValue() );
-//
-//    };
-    
-    addAndMakeVisible(visualiser);
+    // Positive Threshold Knob
     
     posThreshKnob.setSliderStyle( juce::Slider::SliderStyle::Rotary );
     posThreshKnob.setTextBoxStyle( juce::Slider::TextBoxBelow, true, 100, 50 );
     addAndMakeVisible( posThreshKnob );
     
     posThreshAttachment = std::make_unique<SliderAttachment>( audioProcessor.parameters, "positive threshold", posThreshKnob );
+    
+    //==============================================================================
+    // Visualiser
+    //==============================================================================
+    
+    addAndMakeVisible( oscilloscope2D );
+    
+    
     
     setSize( 800, 640 );
 }

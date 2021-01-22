@@ -11,6 +11,7 @@
 
 //==============================================================================
 CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
+
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
@@ -20,6 +21,7 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
                        ), // end of AudioProcessor initialization
+
         parameters( *this, nullptr, juce::Identifier("CosmicClipper"), //createParameters() )
                    {
                         std::make_unique<juce::AudioParameterFloat>
@@ -133,16 +135,19 @@ void CosmicClipperAudioProcessor::changeProgramName (int index, const juce::Stri
 //==============================================================================
 void CosmicClipperAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    linkedThreshold = *linkThreshParam < 0.5f ? true : false;
     
+    //=======================================================================================
+    // Getting last values
+    //=======================================================================================
+    
+    linkedThreshold = *linkThreshParam < 0.5f ? true : false;
     prevPosThresh = *posThreshParam;
     
     if( linkedThreshold )
-    {
         *negThreshParam = (-1.f * prevPosThresh);
-    }
     
     prevNegThresh = *negThreshParam;
+    
     
 #if SINE_TEST == 1
 
@@ -208,7 +213,6 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
 #if SINE_TEST == 1
     testOscillator.setFrequency( 60.f );
     
-    
     auto* leftBuffer  = buffer.getWritePointer(0);
     auto* rightBuffer = buffer.getWritePointer(1);
     
@@ -218,8 +222,6 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
         currentAngle += angleDelta;
         rightBuffer[sample] = leftBuffer[sample] = currentSample;
     }
-    
-    
 #endif
     
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
@@ -228,9 +230,8 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
 
         for( int samplePos = 0; samplePos < numSamples; ++samplePos )
         {
-            float& sample = channelData[samplePos];
             
-            //DBG("Before: " << sample);
+            float& sample = channelData[samplePos];
             
             //=======================================================================================
             // creates a ramp to new value to prevent pops while automating parameter
@@ -285,7 +286,7 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
     fifo.push( buffer );
     
 #if SINE_TEST == 1
-    buffer.applyGain(0.2f);
+    buffer.applyGain(0.1f);
     //buffer.clear();
 #endif
     

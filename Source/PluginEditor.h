@@ -11,7 +11,8 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "KnobPanel.h"
-
+#include "RingBuffer.h"
+#include "Oscilloscope2D.h"
 
 class Visualiser : public juce::AudioVisualiserComponent
 {
@@ -95,6 +96,16 @@ public:
     
     typedef juce::AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
     
+    RingBuffer<float>* getRingBuffer()
+    {
+        return ringBuffer;
+    }
+    
+    Oscilloscope2D* getOscilloscope()
+    {
+        return oscilloscope2D;
+    }
+    
 private:
 
     CosmicClipperAudioProcessor& audioProcessor;
@@ -102,15 +113,27 @@ private:
     juce::AudioBuffer<float> graphicsBuffer;
     Visualiser visualiser;
     
+    //==============================================================================
+    // Visualiser stuff
+    //==============================================================================
+    
+    // Audio & GL Audio Buffer
+    RingBuffer<float>* ringBuffer;
+    Oscilloscope2D* oscilloscope2D;
+    
+    //==============================================================================
+    // GUI Elements
+    //==============================================================================
+    
+    // Positive Threshold knob
     juce::Slider posThreshKnob;
     std::unique_ptr<SliderAttachment> posThreshAttachment;
     
-    //GenericEditor editor{ *this, audioProcessor.parameters };
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CosmicClipperAudioProcessorEditor)
+    //==============================================================================
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR( CosmicClipperAudioProcessorEditor )
 };
 
 
-//==============================================================================
+
 
 
