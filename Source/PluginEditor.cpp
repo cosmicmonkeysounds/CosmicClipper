@@ -27,6 +27,12 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     
     addAndMakeVisible(visualiser);
     
+    posThreshKnob.setSliderStyle( juce::Slider::SliderStyle::Rotary );
+    posThreshKnob.setTextBoxStyle( juce::Slider::TextBoxBelow, true, 100, 50 );
+    addAndMakeVisible( posThreshKnob );
+    
+    posThreshAttachment = std::make_unique<SliderAttachment>( audioProcessor.parameters, "positive threshold", posThreshKnob );
+    
     setSize( 800, 640 );
 }
 
@@ -52,6 +58,14 @@ void CosmicClipperAudioProcessorEditor::resized()
                                              .withWidth(  bounds.getWidth()  * 0.75 );
     
     visualiser.setBounds( visualiserBounds );
+    
+    const int controlPanelVerticlePadding = 10;
+    
+    posThreshKnob.setBounds( 0,
+                             visualiser.getHeight() + controlPanelVerticlePadding,
+                             visualiser.getWidth(),
+                             bounds.getHeight() - visualiser.getHeight()
+                            );
 }
 
 void CosmicClipperAudioProcessorEditor::timerCallback()

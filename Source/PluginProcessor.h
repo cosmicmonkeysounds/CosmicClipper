@@ -65,6 +65,8 @@ public:
     
     Fifo<juce::AudioBuffer<float>> fifo;
     
+    juce::AudioProcessorValueTreeState parameters;
+    
     enum ClippingTypes
     {
         HardClipping,
@@ -74,7 +76,7 @@ public:
 
 private:
     
-    juce::AudioProcessorValueTreeState parameters;
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
     
     std::atomic<float> *posThreshParam  = nullptr,
                        *negThreshParam  = nullptr,

@@ -19,10 +19,8 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
-                    #endif
-                    , // end of AudioProcessor initialization
-        parameters(*this, nullptr, juce::Identifier("CosmicClipper"),
+                       ), // end of AudioProcessor initialization
+        parameters( *this, nullptr, juce::Identifier("CosmicClipper"), //createParameters() )
                    {
                         std::make_unique<juce::AudioParameterFloat>
                         (
@@ -32,7 +30,7 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
                             1.f,                  // max value
                             1.f                   // default value
                         ),
-            
+
                         std::make_unique<juce::AudioParameterFloat>
                         (
                             "negative threshold",
@@ -41,7 +39,7 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
                             0.f,
                             -1.f
                         ),
-            
+
                         std::make_unique<juce::AudioParameterBool>
                         (
                             "link thresholds",
@@ -49,7 +47,7 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
                             true
                         )
                    }) // end of parameter (AudioValueTree) initialization
-
+#endif
 {
     posThreshParam  = parameters.getRawParameterValue( "positive threshold" );
     negThreshParam  = parameters.getRawParameterValue( "negative threshold" );
@@ -242,7 +240,7 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
             
             if( currPosThresh != prevPosThresh )
             {
-                currPosThresh += (prevPosThresh - currPosThresh) * (numSamples / samplePos);
+                currPosThresh += (prevPosThresh - currPosThresh) * (samplePos / numSamples);
             }
             
             else
@@ -263,7 +261,7 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
                 
                 if( currNegThresh != prevNegThresh )
                 {
-                    currNegThresh += (prevNegThresh - currNegThresh) * (numSamples / samplePos);
+                    currNegThresh += (prevNegThresh - currNegThresh) * (samplePos / numSamples);
                 }
                 
                 else
@@ -286,8 +284,10 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
     
     fifo.push( buffer );
     
+#if SINE_TEST == 1
     buffer.applyGain(0.2f);
     //buffer.clear();
+#endif
     
 } // end of process block
 
@@ -299,21 +299,28 @@ bool CosmicClipperAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* CosmicClipperAudioProcessor::createEditor()
 {
-    return new CosmicClipperAudioProcessorEditor (*this);
+    return new CosmicClipperAudioProcessorEditor( *this );
 }
 
 //==============================================================================
 void CosmicClipperAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
+    auto state = parameters.copyState();
+    std::unique_ptr<juce::XmlElement> xml( state.createXml() );
+    copyXmlToBinary( *xml, destData );
 }
 
 void CosmicClipperAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
+    std::unique_ptr<juce::XmlElement> xmlState( getXmlFromBinary(data, sizeInBytes) );
+    
+    if( xmlState.get() != nullptr )
+    {
+        if( xmlState->hasTagName(parameters.state.getType()) )
+        {
+            parameters.replaceState( juce::ValueTree::fromXml(*xmlState) );
+        }
+    }
 }
 
 //==============================================================================
@@ -322,3 +329,29 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new CosmicClipperAudioProcessor();
 }
+
+
+//juce::AudioProcessorValueTreeState::ParameterLayout CosmicClipperAudioProcessor::createParameters()
+//{
+//    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
+//    
+//    params.emplace_back( std::make_unique<juce::AudioParameterFloat>(
+//                                                                     "positive threshold",
+//                                                                     "Positive Threshold",
+//                                                                     0.f, 1.f, 1.f
+//                                                                     ));
+//    
+//    params.emplace_back( std::make_unique<juce::AudioParameterFloat>(
+//                                                                     "negative threshold",
+//                                                                     "Negative Threshold",
+//                                                                     -1.f, 0.f, -1.f
+//                                                                     ));
+//    
+//    params.emplace_back( std::make_unique<juce::AudioParameterBool>(
+//                                                                     "link thresholds",
+//                                                                     "Link Threshold",
+//                                                                     true
+//                                                                     ));
+//    
+//    return { params.begin(), params.end() };
+//}
