@@ -14,19 +14,25 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
     
-    addAndMakeVisible( knobPanel );
     
-    knobPanel.inputVolumeKnob->onValueChange = [this]()
-    {
-        audioProcessor.inputVolume.set( knobPanel.inputVolumeKnob->getValue() );
-        
-    };
+    startTimerHz(20);
     
-    setSize( 640, 400 );
+//    addAndMakeVisible( knobPanel );
+//
+//    knobPanel.inputVolumeKnob->onValueChange = [this]()
+//    {
+//        audioProcessor.inputVolume.set( knobPanel.inputVolumeKnob->getValue() );
+//
+//    };
+    
+    addAndMakeVisible(visualiser);
+    
+    setSize( 800, 640 );
 }
 
 CosmicClipperAudioProcessorEditor::~CosmicClipperAudioProcessorEditor()
 {
+    stopTimer();
 }
 
 //==============================================================================
@@ -37,5 +43,40 @@ void CosmicClipperAudioProcessorEditor::paint (juce::Graphics& g)
 
 void CosmicClipperAudioProcessorEditor::resized()
 {
-    knobPanel.setBounds( getLocalBounds() );
+    juce::Rectangle<int> bounds = getBounds();
+    
+    //knobPanel.setBounds( getLocalBounds() );
+    
+    juce::Rectangle<int> visualiserBounds = bounds
+                                             .withHeight( bounds.getHeight() * 0.70 )
+                                             .withWidth(  bounds.getWidth()  * 0.75 );
+    
+    visualiser.setBounds( visualiserBounds );
+}
+
+void CosmicClipperAudioProcessorEditor::timerCallback()
+{
+    
+    //visualiser.clear();
+    
+    if( audioProcessor.fifo.pull(graphicsBuffer) )
+    {
+        for( int sample = 0; sample < graphicsBuffer.getNumSamples(); ++sample )
+        {
+            float inputSample = 0.f;
+            
+            for( int channel = 0; channel < graphicsBuffer.getNumChannels(); ++channel )
+            {
+                if( const float* inputChannel = graphicsBuffer.getWritePointer(channel) )
+                {
+                    inputSample += inputChannel[sample];
+                }
+            } // end of channel loop
+            
+            inputSample *= 0.5f; // boost level for readability
+            visualiser.pushSample( &inputSample, 1 );
+            
+        } // end of sample loop
+        
+    } // end of fifo pull
 }

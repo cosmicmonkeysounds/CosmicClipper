@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="uSmhal" name="CosmicClipper" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1">
-  <MAINGROUP id="z3ajxe" name="CosmicClipper">
+<JUCERPROJECT id="uSmhal" name="Cosmic Clipper" projectType="audioplug" useAppConfig="0"
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" companyName="Cosmic Monkey Sounds">
+  <MAINGROUP id="z3ajxe" name="Cosmic Clipper">
     <GROUP id="{F46DC649-6A62-7737-CFA9-9983EB1946F0}" name="Source">
+      <FILE id="LH7fMv" name="Fifo.h" compile="0" resource="0" file="Source/Fifo.h"/>
       <FILE id="cK1z82" name="KnobPanel.cpp" compile="1" resource="0" file="Source/KnobPanel.cpp"/>
       <FILE id="gp01nS" name="KnobPanel.h" compile="0" resource="0" file="Source/KnobPanel.h"/>
       <FILE id="rXPyN8" name="PluginProcessor.cpp" compile="1" resource="0"

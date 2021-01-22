@@ -20,8 +20,50 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
                        )
-#endif
+                    #endif
+                    , // end of AudioProcessor initialization
+        parameters(*this, nullptr, juce::Identifier("CosmicClipper"),
+                   {
+                        std::make_unique<juce::AudioParameterFloat>
+                        (
+                            "positive threshold", // parameter ID
+                            "Positive Threshold", // parameter name
+                            0.f,                  // min value
+                            1.f,                  // max value
+                            1.f                   // default value
+                        ),
+            
+                        std::make_unique<juce::AudioParameterFloat>
+                        (
+                            "negative threshold",
+                            "Negative Threshold",
+                            -1.f,
+                            0.f,
+                            -1.f
+                        ),
+            
+                        std::make_unique<juce::AudioParameterBool>
+                        (
+                            "link thresholds",
+                            "Link Thresholds",
+                            true
+                        )
+                   }) // end of parameter (AudioValueTree) initialization
+
 {
+    posThreshParam  = parameters.getRawParameterValue( "positive threshold" );
+    negThreshParam  = parameters.getRawParameterValue( "negative threshold" );
+    linkThreshParam = parameters.getRawParameterValue( "link thresholds" );
+    
+#if SINE_TEST == 1
+    const std::function<float(float)> sineFunc = [](float deg)
+                                            {
+                                                //DBG( "Sine Func call" );
+                                                return std::sin(deg);
+                                            };
+    
+    testOscillator.initialise( sineFunc, 256 );
+#endif
 }
 
 CosmicClipperAudioProcessor::~CosmicClipperAudioProcessor()
@@ -93,8 +135,28 @@ void CosmicClipperAudioProcessor::changeProgramName (int index, const juce::Stri
 //==============================================================================
 void CosmicClipperAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+    linkedThreshold = *linkThreshParam < 0.5f ? true : false;
+    
+    prevPosThresh = *posThreshParam;
+    
+    if( linkedThreshold )
+    {
+        *negThreshParam = (-1.f * prevPosThresh);
+    }
+    
+    prevNegThresh = *negThreshParam;
+    
+#if SINE_TEST == 1
+
+    testOscillator.prepare({ sampleRate,
+                             static_cast<juce::uint32>(samplesPerBlock),
+                             static_cast<juce::uint32>(getMainBusNumOutputChannels())
+                        });
+    
+    currentSampleRate = sampleRate;
+    updateAngleDelta();
+    
+#endif
 }
 
 void CosmicClipperAudioProcessor::releaseResources()
@@ -142,31 +204,92 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
+    
+    int numSamples = buffer.getNumSamples();
+    
+#if SINE_TEST == 1
+    testOscillator.setFrequency( 60.f );
+    
+    
+    auto* leftBuffer  = buffer.getWritePointer(0);
+    auto* rightBuffer = buffer.getWritePointer(1);
+    
+    for( int sample = 0; sample < numSamples; ++sample )
+    {
+        auto currentSample = (float) std::sin(currentAngle);
+        currentAngle += angleDelta;
+        rightBuffer[sample] = leftBuffer[sample] = currentSample;
+    }
+    
+    
+#endif
+    
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         float* channelData = buffer.getWritePointer (channel);
 
-        for( int sample = 0; sample < buffer.getNumSamples(); ++sample )
+        for( int samplePos = 0; samplePos < numSamples; ++samplePos )
         {
-            float& point = channelData[sample];
+            float& sample = channelData[samplePos];
             
-            point = buffer.getSample( channel, sample ) * inputVolume.get();
+            //DBG("Before: " << sample);
             
-            if( point > distortionThreshold.get() )
+            //=======================================================================================
+            // creates a ramp to new value to prevent pops while automating parameter
+            //=======================================================================================
+            
+            currPosThresh = *posThreshParam;
+            
+            if( currPosThresh != prevPosThresh )
             {
-                point = distortionThreshold.get();
+                currPosThresh += (prevPosThresh - currPosThresh) * (numSamples / samplePos);
             }
             
-        } // sample for loop
-        
-    } // channel for loop
-}
+            else
+            {
+                prevPosThresh = *posThreshParam;
+            }
+            
+            //=======================================================================================
+            
+            if( linkedThreshold )
+            {
+                currNegThresh = prevNegThresh = (-1.f * currPosThresh);
+            }
+            
+            else
+            {
+                currNegThresh = *negThreshParam;
+                
+                if( currNegThresh != prevNegThresh )
+                {
+                    currNegThresh += (prevNegThresh - currNegThresh) * (numSamples / samplePos);
+                }
+                
+                else
+                {
+                    prevNegThresh = *negThreshParam;
+                }
+            }
+            
+            //=======================================================================================
+            // Transfer Function gets applied to sample
+            //=======================================================================================
+            
+            transferFuncs[ClippingTypes::HardClipping]( sample );
+            //DBG("After: " << sample);
+            
+            //=======================================================================================
+            
+        } // end of sample for loop
+    } // end of channel for loop
+    
+    fifo.push( buffer );
+    
+    buffer.applyGain(0.2f);
+    //buffer.clear();
+    
+} // end of process block
 
 //==============================================================================
 bool CosmicClipperAudioProcessor::hasEditor() const

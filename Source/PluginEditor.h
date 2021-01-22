@@ -12,25 +12,53 @@
 #include "PluginProcessor.h"
 #include "KnobPanel.h"
 
+
+class Visualiser : public juce::AudioVisualiserComponent
+{
+public:
+    Visualiser() : AudioVisualiserComponent(1)
+    {
+        setBufferSize(128);
+        setSamplesPerBlock(16);
+        setColours( juce::Colours::black, juce::Colours::hotpink );
+    }
+    
+    ~Visualiser()
+    {
+        
+    }
+};
+
+
 //==============================================================================
-/**
-*/
-class CosmicClipperAudioProcessorEditor  : public juce::AudioProcessorEditor
+
+
+class CosmicClipperAudioProcessorEditor  : public juce::AudioProcessorEditor,
+                                           public juce::Timer
 {
 public:
     CosmicClipperAudioProcessorEditor (CosmicClipperAudioProcessor&);
     ~CosmicClipperAudioProcessorEditor() override;
 
     //==============================================================================
+    // AudioProcessorEditor overrides
+    //==============================================================================
+    
     void paint (juce::Graphics&) override;
     void resized() override;
+    
+    //==============================================================================
+    // Timer overrides
+    //==============================================================================
 
+    void timerCallback() override;
+    
 private:
-    // This reference is provided as a quick way for your editor to
-    // access the processor object that created it.
+
     CosmicClipperAudioProcessor& audioProcessor;
     
-    KnobPanel knobPanel;
+    juce::AudioBuffer<float> graphicsBuffer;
+    Visualiser visualiser;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CosmicClipperAudioProcessorEditor)
 };
