@@ -149,7 +149,7 @@ public:
     ScopeComponent(Queue& queueuToUse) : audioBufferQueue(queueuToUse)
     {
         sampleData.fill(SampleType(0));
-        setFramePerSecond(30);
+        setFramePerSecond(24);
     }
 
     void setFramePerSecond(int framePerSecond)
@@ -165,7 +165,7 @@ public:
 
         // Oxford Blue
         g.setColour( juce::Colour(12, 27, 51) );
-        g.fillRect(drawArea);
+        g.fillRect( drawArea );
 
         SampleType drawX = (SampleType)drawArea.getX();
         SampleType drawY = (SampleType)drawArea.getY();
