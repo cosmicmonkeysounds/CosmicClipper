@@ -32,8 +32,6 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     // Visualiser
     //==============================================================================
     
-    addAndMakeVisible( oscilloscope2D );
-    
     
     
     setSize( 800, 640 );
@@ -60,40 +58,16 @@ void CosmicClipperAudioProcessorEditor::resized()
                                              .withHeight( bounds.getHeight() * 0.70 )
                                              .withWidth(  bounds.getWidth()  * 0.75 );
     
-    visualiser.setBounds( visualiserBounds );
-    
     const int controlPanelVerticlePadding = 10;
     
     posThreshKnob.setBounds( 0,
-                             visualiser.getHeight() + controlPanelVerticlePadding,
-                             visualiser.getWidth(),
-                             bounds.getHeight() - visualiser.getHeight()
+                             visualiserBounds.getHeight() + controlPanelVerticlePadding,
+                             visualiserBounds.getWidth(),
+                             bounds.getHeight() - visualiserBounds.getHeight()
                             );
 }
 
 void CosmicClipperAudioProcessorEditor::timerCallback()
 {
     
-    //visualiser.clear();
-    
-    if( audioProcessor.fifo.pull(graphicsBuffer) )
-    {
-        for( int sample = 0; sample < graphicsBuffer.getNumSamples(); ++sample )
-        {
-            float inputSample = 0.f;
-            
-            for( int channel = 0; channel < graphicsBuffer.getNumChannels(); ++channel )
-            {
-                if( const float* inputChannel = graphicsBuffer.getWritePointer(channel) )
-                {
-                    inputSample += inputChannel[sample];
-                }
-            } // end of channel loop
-            
-            inputSample *= 0.5f; // boost level for readability
-            visualiser.pushSample( &inputSample, 1 );
-            
-        } // end of sample loop
-        
-    } // end of fifo pull
 }
