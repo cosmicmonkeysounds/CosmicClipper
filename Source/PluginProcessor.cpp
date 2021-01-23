@@ -22,7 +22,7 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
                      #endif
                        ), // end of AudioProcessor initialization
 
-        parameters( *this, nullptr, juce::Identifier("CosmicClipper"), //createParameters() )
+        parametersTreeState( *this, nullptr, juce::Identifier("CosmicClipper"), //createParameters() )
                    {
                         std::make_unique<juce::AudioParameterFloat>
                         (
@@ -50,10 +50,12 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
                         )
                    }) // end of parameter (AudioValueTree) initialization
 #endif
+                // for oscilloscope
+            , scopeDataCollector( scopeDataQueue )
 {
-    posThreshParam  = parameters.getRawParameterValue( "positive threshold" );
-    negThreshParam  = parameters.getRawParameterValue( "negative threshold" );
-    linkThreshParam = parameters.getRawParameterValue( "link thresholds" );
+    posThreshParam  = parametersTreeState.getRawParameterValue( "positive threshold" );
+    negThreshParam  = parametersTreeState.getRawParameterValue( "negative threshold" );
+    linkThreshParam = parametersTreeState.getRawParameterValue( "link thresholds" );
     
 #if SINE_TEST == 1
     const std::function<float(float)> sineFunc = [](float deg)
@@ -285,9 +287,10 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
     
     fifo.push( buffer );
     
+    scopeDataCollector.process( buffer.getReadPointer(0), (size_t)buffer.getNumSamples() );
+    
 #if SINE_TEST == 1
-    buffer.applyGain(0.1f);
-    //buffer.clear();
+    buffer.clear();
 #endif
     
 } // end of process block
@@ -306,7 +309,7 @@ juce::AudioProcessorEditor* CosmicClipperAudioProcessor::createEditor()
 //==============================================================================
 void CosmicClipperAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    auto state = parameters.copyState();
+    auto state = parametersTreeState.copyState();
     std::unique_ptr<juce::XmlElement> xml( state.createXml() );
     copyXmlToBinary( *xml, destData );
 }
@@ -317,9 +320,9 @@ void CosmicClipperAudioProcessor::setStateInformation (const void* data, int siz
     
     if( xmlState.get() != nullptr )
     {
-        if( xmlState->hasTagName(parameters.state.getType()) )
+        if( xmlState->hasTagName(parametersTreeState.state.getType()) )
         {
-            parameters.replaceState( juce::ValueTree::fromXml(*xmlState) );
+            parametersTreeState.replaceState( juce::ValueTree::fromXml(*xmlState) );
         }
     }
 }

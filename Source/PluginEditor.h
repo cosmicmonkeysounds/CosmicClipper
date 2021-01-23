@@ -11,31 +11,41 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 
+
+
 class CosmicClipperAudioProcessorEditor  : public juce::AudioProcessorEditor,
                                            public juce::Timer
 {
 public:
     CosmicClipperAudioProcessorEditor(CosmicClipperAudioProcessor&);
     ~CosmicClipperAudioProcessorEditor() override;
-
-    //==============================================================================
-    // AudioProcessorEditor overrides
-    //==============================================================================
     
     void paint (juce::Graphics&) override;
     void resized() override;
-    
-    //==============================================================================
-    // Timer overrides
-    //==============================================================================
 
     void timerCallback() override;
     
+    //==============================================================================
+    // my stuff
+    //==============================================================================
+    
     typedef juce::AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
+    
     
 private:
 
+    // Rich Black FOGRA 29
+    juce::Colour backgroundColour{ 7, 14, 31 };
+    
     CosmicClipperAudioProcessor& audioProcessor;
+    
+    juce::AudioBuffer<float> graphicsBuffer;
+    
+    //==============================================================================
+    // Oscilloscope
+    //==============================================================================
+    
+    ScopeComponent<float> scopeComponent;
     
     //==============================================================================
     // GUI Elements
@@ -44,6 +54,8 @@ private:
     // Positive Threshold knob
     juce::Slider posThreshKnob;
     std::unique_ptr<SliderAttachment> posThreshAttachment;
+    
+    
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR( CosmicClipperAudioProcessorEditor )

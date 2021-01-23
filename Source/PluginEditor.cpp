@@ -11,7 +11,7 @@
 
 //==============================================================================
 CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClipperAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+    : AudioProcessorEditor (&p), audioProcessor (p), scopeComponent( p.getAudioBufferQueue() )
 {
     
     startTimerHz(20);
@@ -26,15 +26,16 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     posThreshKnob.setTextBoxStyle( juce::Slider::TextBoxBelow, true, 100, 50 );
     addAndMakeVisible( posThreshKnob );
     
-    posThreshAttachment = std::make_unique<SliderAttachment>( audioProcessor.parameters, "positive threshold", posThreshKnob );
+    posThreshAttachment = std::make_unique<SliderAttachment>( audioProcessor.parametersTreeState, "positive threshold", posThreshKnob );
     
     //==============================================================================
     // Visualiser
     //==============================================================================
     
+    addAndMakeVisible( scopeComponent );
     
     
-    setSize( 800, 640 );
+    setSize( 1100, 700 );
 }
 
 CosmicClipperAudioProcessorEditor::~CosmicClipperAudioProcessorEditor()
@@ -45,7 +46,8 @@ CosmicClipperAudioProcessorEditor::~CosmicClipperAudioProcessorEditor()
 //==============================================================================
 void CosmicClipperAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    g.fillAll( getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId) );
+    DBG( "Painting background" );
+    g.fillAll( backgroundColour );
 }
 
 void CosmicClipperAudioProcessorEditor::resized()
@@ -65,9 +67,36 @@ void CosmicClipperAudioProcessorEditor::resized()
                              visualiserBounds.getWidth(),
                              bounds.getHeight() - visualiserBounds.getHeight()
                             );
+    
+    
+    scopeComponent.setBounds( visualiserBounds );
 }
 
 void CosmicClipperAudioProcessorEditor::timerCallback()
 {
     
+    if( audioProcessor.fifo.pull(graphicsBuffer) )
+    {
+        
+        juce::AudioBuffer<float> centerChannelBuffer{ 1, graphicsBuffer.getNumSamples() };
+        centerChannelBuffer.clear();
+        
+        for( int sample = 0; sample < graphicsBuffer.getNumSamples(); ++sample )
+        {
+            float inputSample = 0.f;
+            
+            for( int channel = 0; channel < graphicsBuffer.getNumChannels(); ++channel )
+            {
+                if( const float* inputChannel = graphicsBuffer.getWritePointer(channel) )
+                {
+                    inputSample += inputChannel[sample];
+                }
+            } // end of channel loop
+            
+            //centerChannelBuffer.setSample( 1, sample, inputSample / 2.f );
+            
+        } // end of sample loop
+        
+    } // end of fifo pull
+
 }
