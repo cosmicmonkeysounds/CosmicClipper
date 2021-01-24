@@ -149,7 +149,7 @@ public:
     ScopeComponent(Queue& queueuToUse) : audioBufferQueue(queueuToUse)
     {
         sampleData.fill(SampleType(0));
-        setFramePerSecond(24);
+        setFramePerSecond(20);
     }
 
     void setFramePerSecond(int framePerSecond)

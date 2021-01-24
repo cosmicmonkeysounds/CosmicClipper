@@ -86,6 +86,8 @@ private:
     // Oscilloscope
     //==============================================================================
     
+    AudioBufferQueue<float> scopeDataQueue;
+    ScopeDataCollector<float> scopeDataCollector;
     ScopeComponent<float> scopeComponent;
     
     //==============================================================================

@@ -50,8 +50,6 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
                         )
                    }) // end of parameter (AudioValueTree) initialization
 #endif
-                // for oscilloscope
-            , scopeDataCollector( scopeDataQueue )
 {
     posThreshParam  = parametersTreeState.getRawParameterValue( "positive threshold" );
     negThreshParam  = parametersTreeState.getRawParameterValue( "negative threshold" );
@@ -286,8 +284,6 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
     } // end of channel for loop
     
     fifo.push( buffer );
-    
-    scopeDataCollector.process( buffer.getReadPointer(0), (size_t)buffer.getNumSamples() );
     
 #if SINE_TEST == 1
     buffer.clear();

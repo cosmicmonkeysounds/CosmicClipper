@@ -98,19 +98,7 @@ public:
         }
     };
     
-    AudioBufferQueue<float>& getAudioBufferQueue()
-    {
-        return scopeDataQueue;
-    }
-    
 private:
-    
-    //==============================================================================
-    // Visualiser stuff
-    //==============================================================================
-    
-    AudioBufferQueue<float> scopeDataQueue;
-    ScopeDataCollector<float> scopeDataCollector;
     
     //==============================================================================
     // the cross-thread parameters that get attached to the

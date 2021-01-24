@@ -11,7 +11,7 @@
 
 //==============================================================================
 CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClipperAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p), scopeComponent( p.getAudioBufferQueue() )
+    : AudioProcessorEditor (&p), audioProcessor (p), scopeDataCollector(scopeDataQueue), scopeComponent(scopeDataQueue)
 {
     
     startTimerHz(20);
@@ -101,9 +101,12 @@ void CosmicClipperAudioProcessorEditor::timerCallback()
                 }
             } // end of channel loop
             
-            //centerChannelBuffer.setSample( 1, sample, inputSample / 2.f );
+            centerChannelBuffer.setSample( 0, sample, inputSample / 2.f );
             
         } // end of sample loop
+        
+        scopeDataCollector.process( centerChannelBuffer.getReadPointer(0),
+                                    (size_t)centerChannelBuffer.getNumSamples() );
         
     } // end of fifo pull
 
