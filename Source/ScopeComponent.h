@@ -161,47 +161,22 @@ public:
     void paint(juce::Graphics& g) override
     {
 
-        juce::Rectangle<int> drawArea = getLocalBounds();
-
-        // Oxford Blue
-        g.setColour( juce::Colour(12, 27, 51) );
-        g.fillRect( drawArea );
-
-        SampleType drawX = (SampleType)drawArea.getX();
-        SampleType drawY = (SampleType)drawArea.getY();
-        SampleType drawH = (SampleType)drawArea.getHeight();
-        SampleType drawW = (SampleType)drawArea.getWidth();
-        juce::Rectangle<SampleType> scopeRect = juce::Rectangle<SampleType>{ drawX, drawY, drawW, drawH };
-
-        // Cotton Candy
-        g.setColour( juce::Colour(255, 190, 230) );
-
-        plot( sampleData.data(), sampleData.size(),
-              g, scopeRect,
-              SampleType(0.4), scopeRect.getHeight() / 2 );
+        juce::Rectangle<int> area = getLocalBounds();
         
-    }
+        g.setColour( backgroundColour );
+        
+        g.fillAll( backgroundColour );
 
-    void resized() override {}
+        g.setColour( lineColour );
 
-private:
-
-    void timerCallback() override
-    {
-        audioBufferQueue.pop(sampleData.data());
-        repaint();
-    }
-
-
-    static void plot( const SampleType* data, size_t numSamples,
-                      juce::Graphics& g, juce::Rectangle<SampleType> rect,
-                      SampleType scaler = SampleType(1), SampleType offset = SampleType(0) )
-    {
-        auto w = rect.getWidth();
-        auto h = rect.getHeight();
-        auto right = rect.getRight();
-        auto alignedCentre = rect.getBottom() - offset;
-        auto gain = h * scaler;
+        float w = area.getWidth();
+        float h = area.getHeight();
+        float right = area.getRight();
+        float alignedCentre = area.getBottom() - (area.getHeight() / 2);
+        float gain = h * scaler;
+        
+        size_t numSamples = sampleData.size();
+        auto data = sampleData.data();
 
         for( size_t i = 1; i < numSamples; ++i )
         {
@@ -224,6 +199,39 @@ private:
             
             g.drawLine( x1, y1, x2, y2, 3.f );
         }
+        
+    }
+
+    void resized() override {}
+    
+    ScopeComponent& withBackgroundColour( juce::Colour bg )
+    {
+        backgroundColour = bg;
+        return *this;
+    }
+    
+    ScopeComponent& withLineColour( juce::Colour lc )
+    {
+        lineColour = lc;
+        return *this;
+    }
+    
+    ScopeComponent& withScaler( float s )
+    {
+        scaler = s;
+        return *this;
+    }
+
+private:
+    
+    float scaler;
+    juce::Colour backgroundColour, lineColour;
+                 
+    
+    void timerCallback() override
+    {
+        audioBufferQueue.pop(sampleData.data());
+        repaint();
     }
 
     Queue& audioBufferQueue;

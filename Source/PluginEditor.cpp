@@ -44,32 +44,40 @@ CosmicClipperAudioProcessorEditor::~CosmicClipperAudioProcessorEditor()
 }
 
 //==============================================================================
-void CosmicClipperAudioProcessorEditor::paint (juce::Graphics& g)
+void CosmicClipperAudioProcessorEditor::paint( juce::Graphics& g )
 {
-    DBG( "Painting background" );
-    g.fillAll( backgroundColour );
+    g.fillAll( colours[BLUE_DARK] );
 }
 
 void CosmicClipperAudioProcessorEditor::resized()
 {
-    juce::Rectangle<int> bounds = getBounds();
     
-    //knobPanel.setBounds( getLocalBounds() );
+    float mainWindowPadding = juce::jmin( getBounds().getWidth(), getBounds().getHeight() ) * 0.05f;
     
-    juce::Rectangle<int> visualiserBounds = bounds
-                                             .withHeight( bounds.getHeight() * 0.70 )
-                                             .withWidth(  bounds.getWidth()  * 0.75 );
+    juce::Rectangle<int> mainWindowArea = getBounds().withSizeKeepingCentre( getBounds().getWidth() - mainWindowPadding,
+                                                                             getBounds().getHeight() - mainWindowPadding );
+    
+    juce::Rectangle<int> visualiserArea = mainWindowArea.withHeight( mainWindowArea.getHeight() * 0.7f )
+                                                        .withWidth( mainWindowArea.getWidth() );
+    
+    juce::Rectangle<int> scopeArea = visualiserArea.withWidth( visualiserArea.getWidth() * 0.7f );
+    const float scopeTraceScaler = 0.4f;
+    
+    scopeComponent.withBackgroundColour( colours[BLUE_MID] )
+                  .withLineColour( colours[PINK_LIGHT] )
+                  .withScaler( scopeTraceScaler )
+                  .setBounds( scopeArea );
     
     const int controlPanelVerticlePadding = 10;
     
     posThreshKnob.setBounds( 0,
-                             visualiserBounds.getHeight() + controlPanelVerticlePadding,
-                             visualiserBounds.getWidth(),
-                             bounds.getHeight() - visualiserBounds.getHeight()
+                             visualiserArea.getHeight() + controlPanelVerticlePadding,
+                             visualiserArea.getWidth(),
+                             mainWindowArea.getHeight() - visualiserArea.getHeight()
                             );
     
     
-    scopeComponent.setBounds( visualiserBounds );
+    
 }
 
 void CosmicClipperAudioProcessorEditor::timerCallback()
