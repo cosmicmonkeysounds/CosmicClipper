@@ -14,6 +14,8 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     : AudioProcessorEditor (&p), audioProcessor (p), scopeComponent( p.getAudioBufferQueue() )
 {
     
+    setLookAndFeel( &customColour );
+    
     startTimerHz(20);
         
     //==============================================================================
@@ -50,13 +52,14 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
 
 CosmicClipperAudioProcessorEditor::~CosmicClipperAudioProcessorEditor()
 {
+    setLookAndFeel( nullptr );
     stopTimer();
 }
 
 //==============================================================================
 void CosmicClipperAudioProcessorEditor::paint( juce::Graphics& g )
 {
-    g.fillAll( colours[BLUE_DARK] );
+    g.fillAll( myColours[Colours::BLUE_DARK] );
 }
 
 void CosmicClipperAudioProcessorEditor::resized()
@@ -76,8 +79,8 @@ void CosmicClipperAudioProcessorEditor::resized()
     const float scopeTraceScaler = 0.4f;
     DBG( "Scope area:       " << scopeArea.toString() );
     
-    scopeComponent.withBackgroundColour( colours[BLUE_MID] )
-                  .withLineColour( colours[PINK_LIGHT] )
+    scopeComponent.withBackgroundColour( myColours[Colours::BLUE_MID] )
+                  .withLineColour( myColours[Colours::PINK_LIGHT] )
                   .withScaler( scopeTraceScaler )
                   .setBounds( scopeArea );
     
@@ -100,6 +103,7 @@ void CosmicClipperAudioProcessorEditor::resized()
                                                 .translated(0, sliderOffset) );
     
     DBG( "Pos slider:       " << posThreshKnob.getBounds().toString() );
+    
     
     negThreshKnob.setBounds( thresholdSliderArea.removeFromTop(posThreshKnob.getBounds().getHeight())
                                                 .translated(0, -sliderOffset) );

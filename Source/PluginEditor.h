@@ -11,39 +11,22 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 
-
-
-class CosmicClipperAudioProcessorEditor  : public juce::AudioProcessorEditor,
-                                           public juce::Timer
+enum Colours
 {
-public:
-    CosmicClipperAudioProcessorEditor(CosmicClipperAudioProcessor&);
-    ~CosmicClipperAudioProcessorEditor() override;
-    
-    void paint (juce::Graphics&) override;
-    void resized() override;
+    BLUE_DARK,
+    BLUE_MID,
+    BLUE_LIGHT,
+    BLUE_NEON,
+    PINK_DARK,
+    PINK_MID,
+    PINK_LIGHT,
+    PINK_NEON
+};
 
-    void timerCallback() override;
-    
-    //==============================================================================
-    // my stuff
-    //==============================================================================
-    
-    typedef juce::AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
-    
-    enum Colours
-    {
-        BLUE_DARK,
-        BLUE_MID,
-        BLUE_LIGHT,
-        BLUE_NEON,
-        PINK_DARK,
-        PINK_MID,
-        PINK_LIGHT,
-        PINK_NEON
-    };
-    
-    std::vector<juce::Colour> colours
+struct MyColours
+{
+
+    std::vector<juce::Colour> myColours
     {
 
         // BLUE_DARK, Rich Black FOGRA 29
@@ -72,15 +55,47 @@ public:
         
     };
     
+
+    juce::Colour operator[] (Colours c)
+    {
+        return myColours[c];
+    }
+};
+
+
+struct MyLookAndFeel : juce::LookAndFeel_V4
+{
+    
+    MyLookAndFeel()
+    {
+        setColour( juce::Slider::backgroundColourId, myColours[Colours::PINK_DARK] );
+        setColour( juce::Slider::trackColourId,      myColours[Colours::PINK_LIGHT] );
+    }
+    
+    MyColours myColours;
+};
+
+
+
+class CosmicClipperAudioProcessorEditor  : public juce::AudioProcessorEditor,
+                                           public juce::Timer
+{
+public:
+    CosmicClipperAudioProcessorEditor(CosmicClipperAudioProcessor&);
+    ~CosmicClipperAudioProcessorEditor() override;
+    
+    void paint (juce::Graphics&) override;
+    void resized() override;
+
+    void timerCallback() override;
     
 private:
-
-    // Rich Black FOGRA 29
-    juce::Colour backgroundColour{ 7, 14, 31 };
     
     CosmicClipperAudioProcessor& audioProcessor;
-    
     juce::AudioBuffer<float> graphicsBuffer;
+    
+    MyLookAndFeel customColour;
+    MyColours myColours;
     
     //==============================================================================
     // Oscilloscope
@@ -91,6 +106,8 @@ private:
     //==============================================================================
     // GUI Elements
     //==============================================================================
+    
+    typedef juce::AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
     
     juce::Slider posThreshKnob;
     std::unique_ptr<SliderAttachment> posThreshAttachment;
