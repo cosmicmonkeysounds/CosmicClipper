@@ -141,7 +141,7 @@ private:
     
     void updateAngleDelta()
     {
-        auto cyclesPerSample = 20.0 / currentSampleRate;
+        auto cyclesPerSample = 120.0 / currentSampleRate;
         angleDelta = cyclesPerSample * 2.0 * juce::MathConstants<double>::pi;
     }
     

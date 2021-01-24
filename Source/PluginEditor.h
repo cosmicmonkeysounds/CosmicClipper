@@ -31,6 +31,47 @@ public:
     
     typedef juce::AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
     
+    enum Colours
+    {
+        BLUE_DARK,
+        BLUE_MID,
+        BLUE_LIGHT,
+        BLUE_NEON,
+        PINK_DARK,
+        PINK_MID,
+        PINK_LIGHT,
+        PINK_NEON
+    };
+    
+    std::vector<juce::Colour> colours
+    {
+
+        // BLUE_DARK, Rich Black FOGRA 29
+        juce::Colour{ 7, 14, 31 },
+        
+        // BLUE_MID, Oxford Blue
+        juce::Colour{ 12, 27, 64 },
+
+        // BLUE_LIGHT, Lavender Blue
+        juce::Colour{ 197, 198, 255 },
+        
+        // BLUE_NEON, Sky Blue Crayola
+        juce::Colour{ 87, 213, 231 },
+        
+        // PINK_DARK, Twighlight Lavender
+        juce::Colour{ 129, 55, 100 },
+        
+        // PINK_MID, Hot Pink
+        juce::Colour{ 255, 109, 189 },
+        
+        // PINK_LIGHT, Cotton Candy
+        juce::Colour{ 255, 190, 230 },
+        
+        // PINK_NEON, Paradise Pink
+        juce::Colour{ 238, 66, 102 }
+        
+    };
+    
     
 private:
 
@@ -54,8 +95,6 @@ private:
     // Positive Threshold knob
     juce::Slider posThreshKnob;
     std::unique_ptr<SliderAttachment> posThreshAttachment;
-    
-    
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR( CosmicClipperAudioProcessorEditor )
