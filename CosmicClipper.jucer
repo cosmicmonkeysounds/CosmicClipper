@@ -59,6 +59,6 @@
     <MODULE id="juce_opengl" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
   </MODULES>
   <LIVE_SETTINGS>
-    <OSX/>
+    <OSX buildEnabled="0" continuousRebuildEnabled="1"/>
   </LIVE_SETTINGS>
 </JUCERPROJECT>

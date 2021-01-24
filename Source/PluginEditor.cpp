@@ -22,11 +22,21 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     
     // Positive Threshold Knob
     
-    posThreshKnob.setSliderStyle( juce::Slider::SliderStyle::Rotary );
-    posThreshKnob.setTextBoxStyle( juce::Slider::TextBoxBelow, true, 100, 50 );
+    posThreshKnob.setSliderStyle( juce::Slider::SliderStyle::LinearVertical );
+    posThreshKnob.setTextBoxStyle( juce::Slider::NoTextBox, true, 100, 50 );
     addAndMakeVisible( posThreshKnob );
     
-    posThreshAttachment = std::make_unique<SliderAttachment>( audioProcessor.parametersTreeState, "positive threshold", posThreshKnob );
+    posThreshAttachment = std::make_unique<SliderAttachment>( audioProcessor.parametersTreeState,
+                                                              "positive threshold",
+                                                              posThreshKnob );
+    
+    negThreshKnob.setSliderStyle( juce::Slider::SliderStyle::LinearVertical );
+    negThreshKnob.setTextBoxStyle( juce::Slider::NoTextBox, true, 100, 50 );
+    addAndMakeVisible( negThreshKnob );
+    
+    negThreshAttachment = std::make_unique<SliderAttachment>( audioProcessor.parametersTreeState,
+                                                              "negative threshold",
+                                                              negThreshKnob );
     
     //==============================================================================
     // Visualiser
@@ -52,31 +62,58 @@ void CosmicClipperAudioProcessorEditor::paint( juce::Graphics& g )
 void CosmicClipperAudioProcessorEditor::resized()
 {
     
-    float mainWindowPadding = juce::jmin( getBounds().getWidth(), getBounds().getHeight() ) * 0.05f;
+    float mainWindowPadding = juce::jmin( getBounds().getWidth(), getBounds().getHeight() ) * 0.02f;
+    juce::Rectangle<int> r = getBounds().reduced( mainWindowPadding );
+    DBG( "Main window area: " << r.toString() );
     
-    juce::Rectangle<int> mainWindowArea = getBounds().withSizeKeepingCentre( getBounds().getWidth() - mainWindowPadding,
-                                                                             getBounds().getHeight() - mainWindowPadding );
+    juce::Rectangle<int> visualiserArea = r.removeFromTop( r.getHeight() * 0.7f );
+    DBG( "Visualiser area:  " << visualiserArea.toString() );
     
-    juce::Rectangle<int> visualiserArea = mainWindowArea.withHeight( mainWindowArea.getHeight() * 0.7f )
-                                                        .withWidth( mainWindowArea.getWidth() );
+    //==============================================================================
+    // Oscilloscope
     
-    juce::Rectangle<int> scopeArea = visualiserArea.withWidth( visualiserArea.getWidth() * 0.7f );
+    juce::Rectangle<int> scopeArea = visualiserArea.removeFromLeft( visualiserArea.getWidth() * 0.7f );
     const float scopeTraceScaler = 0.4f;
+    DBG( "Scope area:       " << scopeArea.toString() );
     
     scopeComponent.withBackgroundColour( colours[BLUE_MID] )
                   .withLineColour( colours[PINK_LIGHT] )
                   .withScaler( scopeTraceScaler )
                   .setBounds( scopeArea );
     
+    //==============================================================================
+    // Threshold Sliders
+    
+    float sliderScale = 6; //JUCE_LIVE_CONSTANT( 3.5f );
+    
+    int sliderAreaHeight = visualiserArea.getHeight() * scopeTraceScaler / sliderScale;
+    
+    juce::Rectangle<int> thresholdSliderArea = visualiserArea.removeFromLeft( visualiserArea.getWidth() * 0.1f )
+                                                             .reduced( 0, sliderAreaHeight );
+                                                             //.translated( 0, visualiserArea.getHeight() * scopeTraceScaler / 1.5f );
+    
+    DBG( "Slider area:      " << thresholdSliderArea.toString() );
+    
+    int sliderOffset = 9; //JUCE_LIVE_CONSTANT( 5 );
+    
+    posThreshKnob.setBounds( thresholdSliderArea.removeFromTop(thresholdSliderArea.getHeight() * 0.5f)
+                                                .translated(0, sliderOffset) );
+    
+    DBG( "Pos slider:       " << posThreshKnob.getBounds().toString() );
+    
+    negThreshKnob.setBounds( thresholdSliderArea.removeFromTop(posThreshKnob.getBounds().getHeight())
+                                                .translated(0, -sliderOffset) );
+    
+    DBG( "Neg slider:       " << negThreshKnob.getBounds().toString() );
+    
+    //==============================================================================
+    // Control Area
+    
     const int controlPanelVerticlePadding = 10;
     
-    posThreshKnob.setBounds( 0,
-                             visualiserArea.getHeight() + controlPanelVerticlePadding,
-                             visualiserArea.getWidth(),
-                             mainWindowArea.getHeight() - visualiserArea.getHeight()
-                            );
+    juce::Rectangle<int> controlArea = r;
     
-    
+    //posThreshKnob.setBounds( controlArea.removeFromLeft(controlArea.getHeight()/5) );
     
 }
 

@@ -92,9 +92,11 @@ private:
     // GUI Elements
     //==============================================================================
     
-    // Positive Threshold knob
     juce::Slider posThreshKnob;
     std::unique_ptr<SliderAttachment> posThreshAttachment;
+    
+    juce::Slider negThreshKnob;
+    std::unique_ptr<SliderAttachment> negThreshAttachment;
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR( CosmicClipperAudioProcessorEditor )
