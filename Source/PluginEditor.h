@@ -68,8 +68,9 @@ struct MyLookAndFeel : juce::LookAndFeel_V4
     
     MyLookAndFeel()
     {
-        setColour( juce::Slider::backgroundColourId, myColours[Colours::PINK_DARK] );
+        setColour( juce::Slider::backgroundColourId, myColours[Colours::PINK_DARK]  );
         setColour( juce::Slider::trackColourId,      myColours[Colours::PINK_LIGHT] );
+        setColour( juce::Slider::thumbColourId,      myColours[Colours::PINK_NEON]  );
     }
     
     MyColours myColours;
@@ -106,6 +107,8 @@ private:
     //==============================================================================
     // GUI Elements
     //==============================================================================
+    
+    juce::Rectangle<int> thresholdBackgroundArea;
     
     struct CosmicSlider : juce::Component
     {

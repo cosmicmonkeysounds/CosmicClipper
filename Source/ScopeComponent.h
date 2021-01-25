@@ -164,16 +164,18 @@ public:
         juce::Rectangle<int> area = getLocalBounds();
         
         g.setColour( backgroundColour );
-        
         g.fillAll( backgroundColour );
-
-        g.setColour( lineColour );
-
+        
         float w = area.getWidth();
         float h = area.getHeight();
         float right = area.getRight();
         float alignedCentre = area.getBottom() - (area.getHeight() / 2);
         float gain = h * scaler;
+        
+        g.setColour( juce::Colours::whitesmoke );
+        g.drawLine( 0, alignedCentre, w, alignedCentre );
+        
+        g.setColour( lineColour );
         
         size_t numSamples = sampleData.size();
         auto data = sampleData.data();

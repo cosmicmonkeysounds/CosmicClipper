@@ -52,6 +52,9 @@ CosmicClipperAudioProcessorEditor::~CosmicClipperAudioProcessorEditor()
 void CosmicClipperAudioProcessorEditor::paint( juce::Graphics& g )
 {
     g.fillAll( myColours[Colours::BLUE_DARK] );
+    
+    g.setColour( myColours[Colours::BLUE_MID].withMultipliedAlpha(0.5f) );
+    g.fillRect( thresholdBackgroundArea );
 }
 
 
@@ -61,7 +64,7 @@ void CosmicClipperAudioProcessorEditor::resized()
 //=====================================================================================================
     
     float mainWindowPadding = juce::jmin( getBounds().getWidth(), getBounds().getHeight() ) * 0.02f;
-    juce::Rectangle<int> r = getBounds().reduced( mainWindowPadding );
+    juce::Rectangle<int> r  = getBounds().reduced( mainWindowPadding );
     
 //=====================================================================================================
     
@@ -69,7 +72,7 @@ void CosmicClipperAudioProcessorEditor::resized()
     
 //=====================================================================================================
         
-    auto scopeArea = visualiserArea.removeFromLeft( visualiserArea.getWidth() * 0.7f );
+    auto scopeArea = visualiserArea.removeFromLeft( visualiserArea.getWidth() * 0.8f );
     const float scopeTraceScaler = 0.4f;
     
     scopeComponent.withBackgroundColour( myColours[Colours::BLUE_MID] )
@@ -80,16 +83,14 @@ void CosmicClipperAudioProcessorEditor::resized()
 //=====================================================================================================
     
     const float sliderVerticleScale = 6.f;
-    const int sliderVerticleOffset = 9;
+    const int sliderVerticleOffset  = 9;
     const int sliderAreaHeight = visualiserArea.getHeight() * scopeTraceScaler / sliderVerticleScale;
     
-    auto thresholdSliderArea = visualiserArea.removeFromLeft( visualiserArea.getWidth() * 0.1f )
-                                             .reduced( 0, sliderAreaHeight );
-    
+    thresholdBackgroundArea = visualiserArea.removeFromLeft( visualiserArea.getWidth() * 0.2f );
+    auto thresholdSliderArea = thresholdBackgroundArea.reduced( 0, sliderAreaHeight );
     
     posThreshSlider.setBounds( thresholdSliderArea.removeFromTop(thresholdSliderArea.getHeight() * 0.5f)
                                                   .translated(0, sliderVerticleOffset) );
-    
     
     negThreshSlider.setBounds( thresholdSliderArea.removeFromTop(posThreshSlider.getBounds().getHeight())
                                                   .translated(0, -sliderVerticleOffset) );
