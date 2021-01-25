@@ -37,9 +37,9 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
                         (
                             "negative threshold",
                             "Negative Threshold",
-                            -1.f,
                             0.f,
-                            -1.f
+                            1.f,
+                            1.f
                         ),
 
                         std::make_unique<juce::AudioParameterBool>
@@ -209,7 +209,6 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    
     int numSamples = buffer.getNumSamples();
     
 #if SINE_TEST == 1
@@ -260,7 +259,7 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
             
             else
             {
-                currNegThresh = *negThreshParam;
+                currNegThresh = -(*negThreshParam);
                 
                 if( currNegThresh != prevNegThresh )
                 {
@@ -269,7 +268,7 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
                 
                 else
                 {
-                    prevNegThresh = *negThreshParam;
+                    prevNegThresh = -(*negThreshParam);
                 }
             }
             

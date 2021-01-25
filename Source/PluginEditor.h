@@ -107,12 +107,41 @@ private:
     // GUI Elements
     //==============================================================================
     
+    struct CosmicSlider : juce::Component
+    {
+        bool flipped = false;
+        juce::Slider slider;
+        
+        CosmicSlider()
+        {
+            DBG( "regular CTOR" );
+            slider.setSliderStyle( juce::Slider::SliderStyle::LinearVertical );
+            slider.setTextBoxStyle( juce::Slider::NoTextBox, true, 100, 50 );
+            addAndMakeVisible( slider );
+        }
+        
+        void paint( juce::Graphics& g )
+        {
+            slider.repaint();
+        }
+        
+        void resized()
+        {
+            slider.setBounds( getLocalBounds() );
+            
+            if( flipped )
+            {
+                slider.setTransform( juce::AffineTransform::verticalFlip(slider.getHeight()) );
+            }
+        }
+    };
+    
     typedef juce::AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
     
-    juce::Slider posThreshKnob;
+    CosmicSlider posThreshSlider;
     std::unique_ptr<SliderAttachment> posThreshAttachment;
     
-    juce::Slider negThreshKnob;
+    CosmicSlider negThreshSlider;
     std::unique_ptr<SliderAttachment> negThreshAttachment;
     
     //==============================================================================
