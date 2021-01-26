@@ -113,7 +113,9 @@ public:
     
     void paint( juce::Graphics& g ) override
     {
-        g.setColour( juce::Colours::white );
+        juce::Font f{ juce::Font::getDefaultMonospacedFontName(), 14.f, juce::Font::FontStyleFlags::plain };
+        g.setColour( juce::Colours::whitesmoke );
+        g.setFont( f );
         
         for( auto tick : ticks )
             g.drawSingleLineText( juce::String(tick.db), 5, tick.y + yOffset );

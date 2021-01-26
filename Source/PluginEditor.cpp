@@ -85,7 +85,7 @@ void CosmicClipperAudioProcessorEditor::paint( juce::Graphics& g )
     g.setColour( myColours[Colours::PINK_MID] );
     
     g.fillRect( scopePanel );
-    g.fillRect( thresholdBackgroundArea );
+    g.fillRect( thresholdBackgroundArea.expanded(innerWindowPadding, 0) );
     g.fillRect( meterPanel );
     g.fillRect( controlPanel );
     
@@ -99,7 +99,7 @@ void CosmicClipperAudioProcessorEditor::paint( juce::Graphics& g )
     g.fillRect( controlPanel.reduced(innerWindowPadding) );
     
     g.setColour( myColours[Colours::BLUE_DARK] );
-    g.fillRect( thresholdBackgroundArea.reduced(innerWindowPadding) );
+    g.fillRect( thresholdBackgroundArea.reduced(0, innerWindowPadding) );
     g.fillRect( meterPanel.reduced(innerWindowPadding) );
 }
 
