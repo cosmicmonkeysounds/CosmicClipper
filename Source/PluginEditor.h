@@ -10,6 +10,7 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include "LevelMeter.h"
 
 enum Colours
 {
@@ -62,21 +63,60 @@ struct MyColours
     }
 };
 
+//================================================================================================
 
 struct MyLookAndFeel : juce::LookAndFeel_V4
 {
+    
+    MyColours myColours;
     
     MyLookAndFeel()
     {
         setColour( juce::Slider::backgroundColourId, myColours[Colours::PINK_DARK]  );
         setColour( juce::Slider::trackColourId,      myColours[Colours::PINK_LIGHT] );
+        
+        setColour( juce::Slider::rotarySliderFillColourId,    myColours[Colours::BLUE_NEON] );
+        setColour( juce::Slider::rotarySliderOutlineColourId, myColours[Colours::BLUE_DARK] );
+        
         setColour( juce::Slider::thumbColourId,      myColours[Colours::PINK_NEON]  );
     }
     
-    MyColours myColours;
+    void drawRotarySlider( juce::Graphics& g, int x, int y, int w, int h, float pos,
+                           const float startAngle, const float endAngle, juce::Slider& slider )
+    {
+        float radius  = (float) juce::jmin( w/2, h/2 ) - 4.f;
+        float centreX = (float) x + (float) w * 0.5f;
+        float centreY = (float) y + (float) h * 0.5f;
+        float rx      = centreX - radius;
+        float ry      = centreY - radius;
+        float rw      = radius * 2.f;
+        float angle   = startAngle + pos * (endAngle - startAngle);
+        
+        juce::Rectangle<float> area{ rx, ry, rw, rw };
+        float outlineThickness = 4.f;
+        
+        g.setColour( myColours[Colours::BLUE_MID] );
+        g.fillEllipse( area );
+        
+        g.setColour( myColours[Colours::PINK_NEON] );
+        g.drawEllipse( area, outlineThickness );
+        
+        juce::Path pointer;
+        float pointerThickness = 3.f;
+        float pointerLength    = radius * 0.5f;
+
+        pointer.addRectangle( -pointerThickness * 0.5f, -radius,
+                               pointerThickness, pointerLength );
+        
+        pointer.applyTransform( juce::AffineTransform::rotation(angle).translated(centreX, centreY) );
+        
+        g.setColour( myColours[Colours::BLUE_NEON] );
+        g.fillPath( pointer );
+    }
+    
 };
 
-
+//================================================================================================
 
 class CosmicClipperAudioProcessorEditor  : public juce::AudioProcessorEditor,
                                            public juce::Timer
@@ -93,22 +133,24 @@ public:
 private:
     
     CosmicClipperAudioProcessor& audioProcessor;
-    juce::AudioBuffer<float> graphicsBuffer;
     
     MyLookAndFeel customColour;
     MyColours myColours;
+    
+    const int innerWindowPadding = 5;
     
     //==============================================================================
     // Oscilloscope
     //==============================================================================
     
+    juce::Rectangle<int> scopePanel;
+    
+    juce::AudioBuffer<float> scopeGraphicsBuffer;
     ScopeComponent<float> scopeComponent;
     
     //==============================================================================
     // GUI Elements
     //==============================================================================
-    
-    juce::Rectangle<int> thresholdBackgroundArea;
     
     struct CosmicSlider : juce::Component
     {
@@ -117,7 +159,6 @@ private:
         
         CosmicSlider()
         {
-            DBG( "regular CTOR" );
             slider.setSliderStyle( juce::Slider::SliderStyle::LinearVertical );
             slider.setTextBoxStyle( juce::Slider::NoTextBox, true, 100, 50 );
             addAndMakeVisible( slider );
@@ -139,7 +180,59 @@ private:
         }
     };
     
+    struct CosmicKnob : juce::Component
+    {
+        MyColours myColours;
+        
+        juce::Slider knob;
+        juce::Label nameLabel, valueLabel;
+        
+        const juce::String& name;
+        juce::Rectangle<int> knobArea;
+        juce::Rectangle<int> labelArea;
+        const int knobPadding = 25;
+        
+        CosmicKnob( const juce::String& n ) : name(n)
+        {
+            knob.setSliderStyle( juce::Slider::SliderStyle::Rotary );
+            knob.setTextBoxStyle( juce::Slider::NoTextBox, true, 100, 50 );
+            addAndMakeVisible( knob );
+            
+            juce::Font f{ juce::Font::getDefaultMonospacedFontName(), 18.f, juce::Font::FontStyleFlags::bold };
+            
+            nameLabel.setText( name, juce::NotificationType::dontSendNotification );
+            nameLabel.setFont( f );
+            nameLabel.setJustificationType( juce::Justification::centred );
+            addAndMakeVisible( nameLabel );
+            
+            addAndMakeVisible( valueLabel );
+        }
+        
+        void paint( juce::Graphics& g ) override
+        {
+
+        }
+        
+        void resized() override
+        {
+            knobArea  = getLocalBounds();
+            
+            labelArea = knobArea.removeFromBottom( knobPadding )
+                                .translated( 0, -knobPadding / 2 );
+            
+            knobArea  = knobArea.reduced( knobPadding / 2 )
+                                .translated( 0, -knobPadding / 5 );
+            
+            knob.setBounds( knobArea );
+            nameLabel.setBounds( labelArea );
+        }
+    };
+    
+//================================================================================================
+    
     typedef juce::AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
+    
+    juce::Rectangle<int> thresholdBackgroundArea;
     
     CosmicSlider posThreshSlider;
     std::unique_ptr<SliderAttachment> posThreshAttachment;
@@ -147,7 +240,32 @@ private:
     CosmicSlider negThreshSlider;
     std::unique_ptr<SliderAttachment> negThreshAttachment;
     
-    //==============================================================================
+//================================================================================================
+    
+    juce::AudioBuffer<float> inputGraphicsBuffer;
+    juce::AudioBuffer<float> outputGraphicsBuffer;
+    
+    Meter inputMeter, outputMeter;
+    DB_Scale dbScale;
+    
+    juce::Rectangle<int> meterPanel;
+    
+//================================================================================================
+    
+    juce::Rectangle<int> controlPanel;
+    
+    CosmicKnob inputKnob{ "INPUT GAIN" };
+    std::unique_ptr<SliderAttachment> inputKnobAttachment;
+    
+    CosmicKnob outputKnob{ "OUTPUT GAIN" };
+    std::unique_ptr<SliderAttachment> outputKnobAttachment;
+
+//================================================================================================
+        
+
+    
+//================================================================================================
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR( CosmicClipperAudioProcessorEditor )
 };
 

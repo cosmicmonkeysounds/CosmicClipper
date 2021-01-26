@@ -4,6 +4,7 @@
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" companyName="Cosmic Monkey Sounds">
   <MAINGROUP id="z3ajxe" name="Cosmic Clipper">
     <GROUP id="{F46DC649-6A62-7737-CFA9-9983EB1946F0}" name="Source">
+      <FILE id="YKwznC" name="LevelMeter.h" compile="0" resource="0" file="Source/LevelMeter.h"/>
       <FILE id="G2ePEY" name="ScopeComponent.h" compile="0" resource="0"
             file="Source/ScopeComponent.h"/>
       <FILE id="LH7fMv" name="Fifo.h" compile="0" resource="0" file="Source/Fifo.h"/>
