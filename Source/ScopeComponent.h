@@ -157,27 +157,51 @@ public:
         jassert(framePerSecond > 0 && framePerSecond < 1000);
         startTimerHz(framePerSecond);
     }
+    
+    void updateThresholds( float p, float n )
+    {
+        posThresh = p;
+        negThresh = n;
+    }
 
     void paint(juce::Graphics& g) override
     {
 
         juce::Rectangle<int> area = getLocalBounds();
         
-        float w = area.getWidth();
-        float h = area.getHeight();
-        float right = area.getRight();
-        float alignedCentre = area.getBottom() - (area.getHeight() / 2);
-        float gain = h * scaler;
+        float w       = area.getWidth();
+        float h       = area.getHeight();
+        float right   = area.getRight();
+        float yCentre = area.getCentreY();
+        float gain    = h * scaler;
+        float s       = 51.f;
         
-        juce::Line<float> l{ 0, alignedCentre, w, alignedCentre };
-        const float dashes[2] = { 6.f, 4.f };
+        juce::Line<float> l{ 0, yCentre, w, yCentre };
+        const float centreDashes[2] = { 8.f, 5.f };
+        const float threshDashes[2] = { 3.f, 3.f };
+        
+        float posThreshY = juce::jmap( posThresh,
+                                       0.f, 1.f,
+                                       yCentre, scaler * s );
+        
+        juce::Line<float> pos{ 0, posThreshY, w, posThreshY };
+        
+        float negThreshY = juce::jmap( negThresh,
+                                       1.f, 0.f,
+                                       h - (scaler * s), yCentre );
+        
+        juce::Line<float> neg{ 0, negThreshY, w, negThreshY };
+        
         g.setColour( juce::Colours::whitesmoke );
-        g.drawDashedLine( l, dashes, 2 );
         
-        g.setColour( lineColour );
+        g.drawDashedLine( l, centreDashes, 2 );
+        g.drawDashedLine( pos, threshDashes, 2 );
+        g.drawDashedLine( neg, threshDashes, 2 );
         
         size_t numSamples = sampleData.size();
         auto data = sampleData.data();
+        
+        g.setColour( lineColour );
 
         for( size_t i = 1; i < numSamples; ++i )
         {
@@ -186,17 +210,15 @@ public:
                                          SampleType(0), SampleType(numSamples - 1),
                                          SampleType(right - w), SampleType(right) );
             
-            const float y1 = alignedCentre - gain
-                                           * juce::jmax( SampleType(-1.0),
-                                                         juce::jmin(SampleType(1.0), data[i - 1]) );
+            const float y1 = yCentre - gain * juce::jmax( SampleType(-1.0),
+                                                          juce::jmin(SampleType(1.0), data[i - 1]) );
             
             const float x2 = juce::jmap( SampleType(i),
                                          SampleType(0), SampleType(numSamples - 1),
                                          SampleType(right - w), SampleType(right) );
             
-            const float y2 = alignedCentre - gain
-                                           * juce::jmax( SampleType(-1.0),
-                                                         juce::jmin(SampleType(1.0), data[i]) );
+            const float y2 = yCentre - gain * juce::jmax( SampleType(-1.0),
+                                                          juce::jmin(SampleType(1.0), data[i]) );
             
             g.drawLine( x1, y1, x2, y2, 3.f );
         }
@@ -225,7 +247,7 @@ public:
 
 private:
     
-    float scaler;
+    float scaler, posThresh, negThresh;
     juce::Colour backgroundColour, lineColour;
                  
     
