@@ -57,7 +57,7 @@ public:
     
     //==============================================================================
     // for pushing shit to graphics thread safely
-    Fifo<juce::AudioBuffer<float>> fifo;
+    Fifo<juce::AudioBuffer<float>> scopeFifo, inputFifo, outputFifo;
     
     //==============================================================================
     // for keeping track of the gui elements and their values
@@ -115,20 +115,17 @@ private:
     //==============================================================================
     // the cross-thread parameters that get attached to the
     // parametersTreeState in PluginProcessor.cpp ctor
-    std::atomic<float> *posThreshParam  = nullptr,
-                       *negThreshParam  = nullptr,
-                       *linkThreshParam = nullptr;
+    std::atomic<float> *posThreshParam  = nullptr, *negThreshParam  = nullptr, *linkThreshParam = nullptr,
+                       *inputGainParam  = nullptr, *outputGainParam = nullptr;
     
     std::atomic<bool> linkedThreshold{false};
     
     //==============================================================================
     // for calculating smooth ramping in processBlock()
-    float currPosThresh{1.f},
-          prevPosThresh{1.f},
-          currNegThresh{-1.f},
-          prevNegThresh{-1.f};
+    float currPosThresh{1.f},  prevPosThresh{1.f}, currNegThresh{-1.f}, prevNegThresh{-1.f},
+          currInputGain{1.f},  prevInputGain{1.f}, currOutputGain{1.f}, prevOutputGain{1.f},
+          posOffset{0.f}, negOffset{0.f};
 
-    
 //==============================================================================
 // for testing purposes 
 #if SINE_TEST == 1

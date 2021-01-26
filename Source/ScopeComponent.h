@@ -163,17 +163,16 @@ public:
 
         juce::Rectangle<int> area = getLocalBounds();
         
-        g.setColour( backgroundColour );
-        g.fillAll( backgroundColour );
-        
         float w = area.getWidth();
         float h = area.getHeight();
         float right = area.getRight();
         float alignedCentre = area.getBottom() - (area.getHeight() / 2);
         float gain = h * scaler;
         
+        juce::Line<float> l{ 0, alignedCentre, w, alignedCentre };
+        const float dashes[2] = { 6.f, 4.f };
         g.setColour( juce::Colours::whitesmoke );
-        g.drawLine( 0, alignedCentre, w, alignedCentre );
+        g.drawDashedLine( l, dashes, 2 );
         
         g.setColour( lineColour );
         
