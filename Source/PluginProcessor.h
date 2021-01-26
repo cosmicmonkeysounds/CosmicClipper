@@ -103,6 +103,9 @@ public:
         return scopeDataQueue;
     }
     
+    float getPosThresh() { return *posThreshParam; }
+    float getNegThresh() { return *negThreshParam; }
+    
 private:
     
     //==============================================================================
@@ -123,8 +126,7 @@ private:
     //==============================================================================
     // for calculating smooth ramping in processBlock()
     float currPosThresh{1.f},  prevPosThresh{1.f}, currNegThresh{-1.f}, prevNegThresh{-1.f},
-          currInputGain{1.f},  prevInputGain{1.f}, currOutputGain{1.f}, prevOutputGain{1.f},
-          posOffset{0.f}, negOffset{0.f};
+          currInputGain{1.f},  prevInputGain{1.f}, currOutputGain{1.f}, prevOutputGain{1.f};
 
 //==============================================================================
 // for testing purposes 

@@ -195,6 +195,8 @@ void CosmicClipperAudioProcessorEditor::timerCallback()
         
     } // end of scopeFifo pull
     
+    scopeComponent.updateThresholds( audioProcessor.getPosThresh(), audioProcessor.getNegThresh() );
+    
     if( audioProcessor.inputFifo.pull(inputGraphicsBuffer) )
     {
         int numSamples  = inputGraphicsBuffer.getNumSamples();

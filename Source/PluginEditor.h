@@ -103,7 +103,7 @@ struct MyLookAndFeel : juce::LookAndFeel_V4
         
         juce::Path pointer;
         float pointerThickness = 3.f;
-        float pointerLength    = radius * 0.5f;
+        float pointerLength    = radius * 0.33f;
 
         pointer.addRectangle( -pointerThickness * 0.5f, -radius,
                                pointerThickness, pointerLength );
