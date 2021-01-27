@@ -97,6 +97,7 @@ public:
                     currentState = State::Collecting;
                     break;
                 }
+                
                 prevSample = currentSample;
 
             }
@@ -110,7 +111,7 @@ public:
 
                 if (numCollected == buffer.size())
                 {
-                    audioBufferQueue.push(buffer.data(), buffer.size());
+                    audioBufferQueue.push( buffer.data(), buffer.size() );
                     currentState = State::WaitingForTrigger;
                     prevSample = SampleType(100);
                     break;
@@ -128,7 +129,7 @@ private:
         Collecting
     };
 
-    static constexpr auto triggerLevel = SampleType(0.001);
+    static constexpr auto triggerLevel = SampleType(0.0001);
 
     std::array<SampleType, AudioBufferQueue<SampleType>::bufferSize> buffer;
     State currentState{ State::WaitingForTrigger };

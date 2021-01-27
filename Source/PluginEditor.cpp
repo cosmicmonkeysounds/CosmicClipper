@@ -16,6 +16,8 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     
     setLookAndFeel( &customColour );
     
+    auto& tree = audioProcessor.parametersTreeState;
+    
     startTimerHz(20);
     
 //=====================================================================================================
@@ -26,16 +28,52 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
 //=====================================================================================================
 // THRESHOLD SLIDER PANEL
     
+    auto& posSlider = posThreshSlider.slider;
     addAndMakeVisible( posThreshSlider );
-    posThreshAttachment = std::make_unique<SliderAttachment>( audioProcessor.parametersTreeState,
-                                                              "positive threshold",
-                                                              posThreshSlider.slider );
+    posThreshAttachment = std::make_unique<SliderAttachment>( tree, "positive threshold", posSlider );
     
+    auto& negSlider = negThreshSlider.slider;
     negThreshSlider.flipped = true;
     addAndMakeVisible( negThreshSlider );
-    negThreshAttachment = std::make_unique<SliderAttachment>( audioProcessor.parametersTreeState,
-                                                              "negative threshold",
-                                                              negThreshSlider.slider );
+    negThreshAttachment = std::make_unique<SliderAttachment>( tree, "negative threshold", negSlider );
+    
+    addAndMakeVisible( notLinked );
+    notLinked.setRadioGroupId( LinkedButtons );
+    notLinkAttachment = std::make_unique<ButtonAttachment>( tree, "not linked", notLinked );
+    notLinked.onClick = [&]
+    {
+        updateToggleState( &notLinked, "not linked" );
+        posSlider.onValueChange = [&] { };//posSlider.setValue(posSlider.getValue()); };
+        negSlider.onValueChange = [&] { };//negSlider.setValue(negSlider.getValue()); };
+    };
+    
+    addAndMakeVisible( absoluteRadio );
+    absoluteRadio.setRadioGroupId( LinkedButtons );
+    absoluteAttachment = std::make_unique<ButtonAttachment>( tree, "absolute", absoluteRadio );
+    absoluteRadio.onClick = [&]
+    {
+        updateToggleState( &absoluteRadio, "absolute" );
+        posSlider.onValueChange = [&] { negSlider.setValue(posSlider.getValue()); };
+        negSlider.onValueChange = [&] { posSlider.setValue(negSlider.getValue()); };
+    };
+    
+    addAndMakeVisible( relativeRadio );
+    relativeRadio.setRadioGroupId( LinkedButtons );
+    relativeAttachment = std::make_unique<ButtonAttachment>( tree, "relative", relativeRadio );
+    relativeRadio.onClick = [&]
+    {
+        updateToggleState( &relativeRadio, "relative" );
+        
+        posSlider.onValueChange = [&]
+        {
+            negSlider.setValue( juce::jmax(negSlider.getValue() - (1.0 - posSlider.getValue()), 0.0) );
+        };
+        
+        negSlider.onValueChange = [&]
+        {
+            posSlider.setValue( juce::jmax(posSlider.getValue() - (1.0 - negSlider.getValue()), 0.0) );
+        };
+    };
     
 //=====================================================================================================
 // METER PANEL
@@ -53,15 +91,10 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
 //=====================================================================================================
 // CONTROL PANEL
     
-    addAndMakeVisible( inputKnob );
-    inputKnobAttachment = std::make_unique<SliderAttachment>( audioProcessor.parametersTreeState,
-                                                              "input gain",
-                                                              inputKnob.knob );
-    
-    addAndMakeVisible( outputKnob );
-    outputKnobAttachment = std::make_unique<SliderAttachment>( audioProcessor.parametersTreeState,
-                                                               "output gain",
-                                                               outputKnob.knob );
+    addAndMakeVisible( gainKnob );
+    gainKnobAttachment = std::make_unique<SliderAttachment>( tree,
+                                                             "gain",
+                                                             gainKnob.knob );
     
 //=====================================================================================================
         
@@ -101,6 +134,16 @@ void CosmicClipperAudioProcessorEditor::paint( juce::Graphics& g )
     g.setColour( myColours[Colours::BLUE_DARK] );
     g.fillRect( thresholdBackgroundArea.reduced(0, innerWindowPadding) );
     g.fillRect( meterPanel.reduced(innerWindowPadding) );
+    
+    const float x               = thresholdBackgroundArea.getX();
+    const float w               = thresholdBackgroundArea.getWidth();
+    const float yCentre         = thresholdBackgroundArea.getCentreY();
+    const float centreDashes[2] = { 8.f, 5.f };
+    
+    juce::Line<float> l{ x, yCentre, x+w, yCentre };
+    
+    g.setColour( juce::Colours::whitesmoke );
+    g.drawDashedLine( l, centreDashes, 2 );
 }
 
 void CosmicClipperAudioProcessorEditor::resized()
@@ -113,11 +156,11 @@ void CosmicClipperAudioProcessorEditor::resized()
     
 //=====================================================================================================
     
-    auto visualiserArea = r.removeFromTop( r.getHeight() * 0.7f );
+    auto topBox = r.removeFromTop( r.getHeight() * 0.7f );
     
 //=====================================================================================================
         
-    scopePanel = visualiserArea.removeFromLeft( visualiserArea.getWidth() * 0.8f );
+    scopePanel = topBox.removeFromLeft( topBox.getWidth() * 0.7f );
     auto scopeArea = scopePanel.reduced( innerWindowPadding );
     const float scopeTraceScaler = 0.45f;
     
@@ -128,12 +171,20 @@ void CosmicClipperAudioProcessorEditor::resized()
     
 //=====================================================================================================
     
-    const float sliderVerticleScale = 17.85f;
-    const int sliderVerticleOffset  = 9;
-    const int sliderAreaHeight = visualiserArea.getHeight() * scopeTraceScaler / sliderVerticleScale;
+    int meterPanelWidth = topBox.getWidth();
     
-    thresholdBackgroundArea = visualiserArea.removeFromLeft( visualiserArea.getWidth() * 0.3f );
-    auto thresholdSliderArea = thresholdBackgroundArea.reduced( 0, sliderAreaHeight );
+//=====================================================================================================
+    
+    const float sliderVerticleScale = 21.f;
+    const int sliderVerticleOffset  = 9;
+    const int sliderAreaHeight = topBox.getHeight() * scopeTraceScaler / sliderVerticleScale;
+    
+    thresholdBackgroundArea = topBox.reduced( innerWindowPadding, 0 )
+                                    .translated( -innerWindowPadding/2, 0 );
+    
+    auto topControlArea = thresholdBackgroundArea.reduced( 0, sliderAreaHeight );
+    int xPadding = topControlArea.getWidth()/6;
+    auto thresholdSliderArea = topControlArea.removeFromLeft( xPadding );
     
     posThreshSlider.setBounds( thresholdSliderArea.removeFromTop(thresholdSliderArea.getHeight() * 0.5f)
                                                   .translated(0, sliderVerticleOffset) );
@@ -141,16 +192,28 @@ void CosmicClipperAudioProcessorEditor::resized()
     negThreshSlider.setBounds( thresholdSliderArea.removeFromTop(posThreshSlider.getBounds().getHeight())
                                                   .translated(0, -sliderVerticleOffset) );
     
+    notLinked.setBounds( thresholdSliderArea.removeFromLeft(xPadding) );
+    
 //=====================================================================================================
     
-    meterPanel = visualiserArea;
-    auto meterArea = meterPanel.reduced( innerWindowPadding * 2 );
+    // Last sliver
+    thresholdControlArea = topBox;
     
-    inputMeter.setBounds( meterArea.removeFromLeft(meterArea.getWidth() / 3) );
+//=====================================================================================================
+
+    meterPanel = r.removeFromRight( meterPanelWidth )
+                  .reduced( 0, innerWindowPadding )
+                  .translated( -innerWindowPadding/2 , innerWindowPadding );
+    
+    auto meterArea = meterPanel.reduced( innerWindowPadding * 3 );
+    
+    float meterAreaSpacing = meterArea.getWidth() / 5.f;
+    
+    inputMeter.setBounds( meterArea.removeFromLeft(meterAreaSpacing) );
     
     dbScale.ticks   = inputMeter.ticks;
     dbScale.yOffset = inputMeter.getY();
-    dbScale.setBounds( meterArea.removeFromLeft(meterArea.getWidth() / 2) );
+    dbScale.setBounds( meterArea.removeFromLeft(meterAreaSpacing) );
     
     outputMeter.setBounds( meterArea );
     
@@ -161,8 +224,7 @@ void CosmicClipperAudioProcessorEditor::resized()
     
     auto knobPanel = controlPanel.reduced( innerWindowPadding );
     
-    inputKnob.setBounds(  knobPanel.removeFromLeft(knobPanel.getCentreX()) );
-    outputKnob.setBounds( knobPanel.removeFromLeft(knobPanel.getCentreX()) );
+    gainKnob.setBounds(  knobPanel.removeFromLeft(knobPanel.getCentreX()) );
     
 //=====================================================================================================
     

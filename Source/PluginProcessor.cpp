@@ -44,15 +44,29 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
 
                         std::make_unique<juce::AudioParameterBool>
                         (
-                            "link thresholds",
-                            "Link Thresholds",
+                            "not linked",
+                            "Not Linked",
                             true
                         ),
             
+                        std::make_unique<juce::AudioParameterBool>
+                        (
+                            "absolute",
+                            "Absolute",
+                            false
+                        ),
+        
+                         std::make_unique<juce::AudioParameterBool>
+                         (
+                             "relative",
+                             "Relative",
+                             false
+                         ),
+            
                         std::make_unique<juce::AudioParameterFloat>
                         (
-                            "input gain",
-                            "Input Gain",
+                            "gain",
+                            "Gain",
                             1.f,
                             10.f,
                             1.f
@@ -60,8 +74,17 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
             
                         std::make_unique<juce::AudioParameterFloat>
                         (
-                            "output gain",
-                            "Output Gain",
+                            "input level",
+                            "Input Level",
+                            0.f,
+                            10.f,
+                            1.f
+                        ),
+            
+                        std::make_unique<juce::AudioParameterFloat>
+                        (
+                            "output level",
+                            "Output Level",
                             0.f,
                             10.f,
                             1.f
@@ -72,11 +95,16 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
                 // for oscilloscope
             , scopeDataCollector( scopeDataQueue )
 {
-    posThreshParam  = parametersTreeState.getRawParameterValue( "positive threshold" );
-    negThreshParam  = parametersTreeState.getRawParameterValue( "negative threshold" );
-    linkThreshParam = parametersTreeState.getRawParameterValue( "link thresholds" );
-    inputGainParam  = parametersTreeState.getRawParameterValue( "input gain" );
-    outputGainParam = parametersTreeState.getRawParameterValue( "output gain" );
+    posThreshParam    = parametersTreeState.getRawParameterValue( "positive threshold" );
+    negThreshParam    = parametersTreeState.getRawParameterValue( "negative threshold" );
+    
+    linkThreshParam   = parametersTreeState.getRawParameterValue( "not linked" );
+    absoluteParam     = parametersTreeState.getRawParameterValue( "absolute" );
+    relativeParam     = parametersTreeState.getRawParameterValue( "relative" );
+    
+    inputLevelParam   = parametersTreeState.getRawParameterValue( "input level" );
+    outputLevelParam  = parametersTreeState.getRawParameterValue( "output level" );
+    gainParam         = parametersTreeState.getRawParameterValue( "gain" );
     
 #if SINE_TEST == 1
     const std::function<float(float)> sineFunc = [](float deg)
@@ -159,21 +187,6 @@ void CosmicClipperAudioProcessor::changeProgramName (int index, const juce::Stri
 void CosmicClipperAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     
-    //=======================================================================================
-    // Getting last values
-    //=======================================================================================
-    
-    linkedThreshold = *linkThreshParam < 0.5f ? true : false;
-    prevPosThresh   = *posThreshParam;
-    
-    if( linkedThreshold )
-        *negThreshParam = prevPosThresh;
-    
-    prevNegThresh  = *negThreshParam;
-    
-    prevInputGain  = *inputGainParam;
-    prevOutputGain = *outputGainParam;
-    
 #if SINE_TEST == 1
 
     testOscillator.prepare({ sampleRate,
@@ -248,83 +261,31 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
     }
 #endif
     
+    buffer.applyGain( currInputLevel );
     inputFifo.push( buffer );
-    buffer.applyGain( currInputGain );
-    
+    buffer.applyGain( currGain );
+        
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         float* channelData = buffer.getWritePointer (channel);
 
         for( int samplePos = 0; samplePos < numSamples; ++samplePos )
         {
+            currSampleRatio = samplePos / numSamples;
             
-            float& sample = channelData[samplePos];
-            
-            //=======================================================================================
-            // creates a ramp to new value to prevent pops while automating parameter
-            //=======================================================================================
-            
-            currPosThresh = *posThreshParam;
-            
-            if( currPosThresh != prevPosThresh )
-            {
-                currPosThresh += (prevPosThresh - currPosThresh) * (samplePos / numSamples);
-            }
-            
-            else
-            {
-                prevPosThresh = *posThreshParam;
-            }
-            
-            //=======================================================================================
-            
-            if( linkedThreshold )
-            {
-                currNegThresh = prevNegThresh = (-1.f * currPosThresh);
-            }
-            
-            else
-            {
-                currNegThresh = -(*negThreshParam);
-                
-                if( currNegThresh != prevNegThresh )
-                {
-                    currNegThresh += (prevNegThresh - currNegThresh) * (samplePos / numSamples);
-                }
-                
-                else
-                {
-                    prevNegThresh = -(*negThreshParam);
-                }
-            }
-            
-            currInputGain = *inputGainParam;
-            
-            if( currInputGain != prevInputGain )
-            {
-                currInputGain += (prevInputGain - currInputGain) * (samplePos / numSamples);
-            }
-            
-            else
-            {
-                prevInputGain = currInputGain;
-            }
-            
-            currOutputGain = *outputGainParam;
-            
-            if( currOutputGain != prevOutputGain )
-            {
-                currOutputGain += (prevOutputGain - currOutputGain) * (samplePos / numSamples);
-            }
-            
-            else
-            {
-                prevOutputGain = currOutputGain;
-            }
+
+            rampParameter( *posThreshParam, currPosThresh, prevPosThresh );
+            rampParameter( -(*negThreshParam), currNegThresh, prevNegThresh );
+            rampParameter( *inputLevelParam, currInputLevel, prevInputLevel );
+            rampParameter( *outputLevelParam, currOutputLevel, prevOutputLevel );
+            rampParameter( *gainParam, currGain, prevGain );
             
             //=======================================================================================
             // Transfer Function gets applied to sample
+            
+            float& sample = channelData[samplePos];
             transferFuncs[ClippingTypes::HardClipping]( sample );
+            
             //=======================================================================================
             
         } // end of sample for loop
@@ -333,7 +294,7 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
     scopeFifo.push( buffer );
     scopeDataCollector.process( buffer.getReadPointer(0), (size_t)buffer.getNumSamples() );
     
-    buffer.applyGain( currOutputGain );
+    buffer.applyGain( currOutputLevel );
     outputFifo.push( buffer );
     
 #if SINE_TEST == 1

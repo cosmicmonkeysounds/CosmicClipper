@@ -209,7 +209,7 @@ private:
             valueLabel.setText( juce::String(knob.getValue()) += "%",
                                 juce::NotificationType::dontSendNotification );
             
-            juce::Font valueFont = { juce::Font::getDefaultMonospacedFontName(), 15.f, juce::Font::FontStyleFlags::bold };
+            juce::Font valueFont = { juce::Font::getDefaultMonospacedFontName(), 13.f, juce::Font::FontStyleFlags::bold };
             valueLabel.setFont( valueFont );
             valueLabel.setJustificationType( juce::Justification::centred );
             addAndMakeVisible( valueLabel );
@@ -261,6 +261,25 @@ private:
         }
     };
     
+    typedef juce::AudioProcessorValueTreeState::ButtonAttachment ButtonAttachment;
+    
+    juce::Rectangle<int> radioButtonPanel;
+    
+    juce::ToggleButton notLinked, absoluteRadio, relativeRadio;
+    std::unique_ptr<ButtonAttachment> notLinkAttachment, absoluteAttachment, relativeAttachment;
+    
+    enum RadioButtons
+    {
+        LinkedButtons = 0111
+    };
+    
+    void updateToggleState( juce::Button* btn, juce::String name )
+    {
+        auto state = btn->getToggleState();
+        juce::String stateString = state ? "ON" : "OFF";
+        DBG( name + " changed to " + stateString );
+    }
+    
 //================================================================================================
     
     typedef juce::AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
@@ -275,23 +294,24 @@ private:
     
 //================================================================================================
     
+    juce::Rectangle<int> thresholdControlArea;
+    
+//================================================================================================
+    
+    juce::Rectangle<int> meterPanel;
+    
     juce::AudioBuffer<float> inputGraphicsBuffer;
     juce::AudioBuffer<float> outputGraphicsBuffer;
     
     Meter inputMeter, outputMeter;
     DB_Scale dbScale;
     
-    juce::Rectangle<int> meterPanel;
-    
 //================================================================================================
     
     juce::Rectangle<int> controlPanel;
     
-    CosmicKnob inputKnob{ "GAIN" };
-    std::unique_ptr<SliderAttachment> inputKnobAttachment;
-    
-    CosmicKnob outputKnob{ "OUTPUT LEVEL" };
-    std::unique_ptr<SliderAttachment> outputKnobAttachment;
+    CosmicKnob gainKnob{ "GAIN" };
+    std::unique_ptr<SliderAttachment> gainKnobAttachment;
 
 //================================================================================================
         
