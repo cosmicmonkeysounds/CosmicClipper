@@ -75,11 +75,10 @@ struct MyLookAndFeel : juce::LookAndFeel_V4
     {
         setColour( juce::Slider::backgroundColourId, myColours[Colours::PINK_DARK]  );
         setColour( juce::Slider::trackColourId,      myColours[Colours::PINK_LIGHT] );
+        setColour( juce::Slider::thumbColourId,      myColours[Colours::PINK_NEON]  );
         
         setColour( juce::Slider::rotarySliderFillColourId,    myColours[Colours::BLUE_NEON] );
         setColour( juce::Slider::rotarySliderOutlineColourId, myColours[Colours::BLUE_DARK] );
-        
-        setColour( juce::Slider::thumbColourId,      myColours[Colours::PINK_NEON]  );
     }
     
     void drawRotarySlider( juce::Graphics& g, int x, int y, int w, int h, float pos,
@@ -265,8 +264,8 @@ private:
     
     juce::Rectangle<int> radioButtonPanel;
     
-    juce::ToggleButton notLinked, absoluteRadio, relativeRadio;
-    std::unique_ptr<ButtonAttachment> notLinkAttachment, absoluteAttachment, relativeAttachment;
+    juce::ToggleButton unlinkedRadio, absoluteRadio, relativeRadio, algoLinkRadio;
+    std::unique_ptr<ButtonAttachment> unlikedThresholdsAttachment, absoluteAttachment, relativeAttachment, algoLinkAttachment;
     
     enum RadioButtons
     {
@@ -278,6 +277,32 @@ private:
         auto state = btn->getToggleState();
         juce::String stateString = state ? "ON" : "OFF";
         DBG( name + " changed to " + stateString );
+    }
+    
+    juce::Label posAlgoLabel{ {}, "Positive Algo" };
+    juce::ComboBox posAlgoMenu;
+    
+    void posAlgoChanged()
+    {
+        switch( posAlgoMenu.getSelectedId() )
+        {
+            case 1: DBG("HARD"); break;
+            case 2: DBG("TANH"); break;
+            default: break;
+        }
+    }
+    
+    juce::Label negAlgoLabel{ {}, "Negative Algo" };
+    juce::ComboBox negAlgoMenu;
+    
+    void negAlgoChanged()
+    {
+        switch( negAlgoMenu.getSelectedId() )
+        {
+            case 1: DBG("Neg HARD"); break;
+            case 2: DBG("Neg TANH"); break;
+            default: break;
+        }
     }
     
 //================================================================================================
@@ -294,7 +319,9 @@ private:
     
 //================================================================================================
     
-    juce::Rectangle<int> thresholdControlArea;
+    juce::Rectangle<int> algoControlArea;
+    juce::Rectangle<int> radioButtonArea;
+    juce::Rectangle<int> comboBoxArea;
     
 //================================================================================================
     

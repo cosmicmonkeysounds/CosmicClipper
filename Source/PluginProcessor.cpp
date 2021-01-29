@@ -44,8 +44,8 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
 
                         std::make_unique<juce::AudioParameterBool>
                         (
-                            "not linked",
-                            "Not Linked",
+                            "unlinked thresholds",
+                            "Unlinked Thresholds",
                             true
                         ),
             
@@ -62,6 +62,13 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
                              "Relative",
                              false
                          ),
+            
+                        std::make_unique<juce::AudioParameterBool>
+                        (
+                            "link algorithms",
+                            "Link Algorithms",
+                            true
+                        ),
             
                         std::make_unique<juce::AudioParameterFloat>
                         (
@@ -98,7 +105,7 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
     posThreshParam    = parametersTreeState.getRawParameterValue( "positive threshold" );
     negThreshParam    = parametersTreeState.getRawParameterValue( "negative threshold" );
     
-    linkThreshParam   = parametersTreeState.getRawParameterValue( "not linked" );
+    linkThreshParam   = parametersTreeState.getRawParameterValue( "unlinked thresholds" );
     absoluteParam     = parametersTreeState.getRawParameterValue( "absolute" );
     relativeParam     = parametersTreeState.getRawParameterValue( "relative" );
     
@@ -107,12 +114,7 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
     gainParam         = parametersTreeState.getRawParameterValue( "gain" );
     
 #if SINE_TEST == 1
-    const std::function<float(float)> sineFunc = [](float deg)
-                                            {
-                                                //DBG( "Sine Func call" );
-                                                return std::sin(deg);
-                                            };
-    
+    const std::function<float(float)> sineFunc = [](float deg){ return std::sin(deg); };
     testOscillator.initialise( sineFunc, 256 );
 #endif
 }
