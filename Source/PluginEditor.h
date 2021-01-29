@@ -75,11 +75,10 @@ struct MyLookAndFeel : juce::LookAndFeel_V4
     {
         setColour( juce::Slider::backgroundColourId, myColours[Colours::PINK_DARK]  );
         setColour( juce::Slider::trackColourId,      myColours[Colours::PINK_LIGHT] );
+        setColour( juce::Slider::thumbColourId,      myColours[Colours::PINK_NEON]  );
         
         setColour( juce::Slider::rotarySliderFillColourId,    myColours[Colours::BLUE_NEON] );
         setColour( juce::Slider::rotarySliderOutlineColourId, myColours[Colours::BLUE_DARK] );
-        
-        setColour( juce::Slider::thumbColourId,      myColours[Colours::PINK_NEON]  );
     }
     
     void drawRotarySlider( juce::Graphics& g, int x, int y, int w, int h, float pos,
@@ -209,7 +208,7 @@ private:
             valueLabel.setText( juce::String(knob.getValue()) += "%",
                                 juce::NotificationType::dontSendNotification );
             
-            juce::Font valueFont = { juce::Font::getDefaultMonospacedFontName(), 15.f, juce::Font::FontStyleFlags::bold };
+            juce::Font valueFont = { juce::Font::getDefaultMonospacedFontName(), 13.f, juce::Font::FontStyleFlags::bold };
             valueLabel.setFont( valueFont );
             valueLabel.setJustificationType( juce::Justification::centred );
             addAndMakeVisible( valueLabel );
@@ -261,6 +260,51 @@ private:
         }
     };
     
+    typedef juce::AudioProcessorValueTreeState::ButtonAttachment ButtonAttachment;
+    
+    juce::Rectangle<int> radioButtonPanel;
+    
+    juce::ToggleButton unlinkedRadio, absoluteRadio, relativeRadio, algoLinkRadio;
+    std::unique_ptr<ButtonAttachment> unlikedThresholdsAttachment, absoluteAttachment, relativeAttachment, algoLinkAttachment;
+    
+    enum RadioButtons
+    {
+        LinkedButtons = 0111
+    };
+    
+    void updateToggleState( juce::Button* btn, juce::String name )
+    {
+        auto state = btn->getToggleState();
+        juce::String stateString = state ? "ON" : "OFF";
+        DBG( name + " changed to " + stateString );
+    }
+    
+    juce::Label posAlgoLabel{ {}, "Positive Algo" };
+    juce::ComboBox posAlgoMenu;
+    
+    void posAlgoChanged()
+    {
+        switch( posAlgoMenu.getSelectedId() )
+        {
+            case 1: DBG("HARD"); break;
+            case 2: DBG("TANH"); break;
+            default: break;
+        }
+    }
+    
+    juce::Label negAlgoLabel{ {}, "Negative Algo" };
+    juce::ComboBox negAlgoMenu;
+    
+    void negAlgoChanged()
+    {
+        switch( negAlgoMenu.getSelectedId() )
+        {
+            case 1: DBG("Neg HARD"); break;
+            case 2: DBG("Neg TANH"); break;
+            default: break;
+        }
+    }
+    
 //================================================================================================
     
     typedef juce::AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
@@ -275,23 +319,26 @@ private:
     
 //================================================================================================
     
+    juce::Rectangle<int> algoControlArea;
+    juce::Rectangle<int> radioButtonArea;
+    juce::Rectangle<int> comboBoxArea;
+    
+//================================================================================================
+    
+    juce::Rectangle<int> meterPanel;
+    
     juce::AudioBuffer<float> inputGraphicsBuffer;
     juce::AudioBuffer<float> outputGraphicsBuffer;
     
     Meter inputMeter, outputMeter;
     DB_Scale dbScale;
     
-    juce::Rectangle<int> meterPanel;
-    
 //================================================================================================
     
     juce::Rectangle<int> controlPanel;
     
-    CosmicKnob inputKnob{ "GAIN" };
-    std::unique_ptr<SliderAttachment> inputKnobAttachment;
-    
-    CosmicKnob outputKnob{ "OUTPUT LEVEL" };
-    std::unique_ptr<SliderAttachment> outputKnobAttachment;
+    CosmicKnob gainKnob{ "GAIN" };
+    std::unique_ptr<SliderAttachment> gainKnobAttachment;
 
 //================================================================================================
         

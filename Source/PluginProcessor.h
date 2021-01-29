@@ -106,6 +106,10 @@ public:
     float getPosThresh() { return *posThreshParam; }
     float getNegThresh() { return *negThreshParam; }
     
+    bool isNotLinked() { DBG("link"); return *linkThreshParam < 0.5f ? false : true; }
+    bool isAbsolute()  { DBG("ABso"); return *absoluteParam   < 0.5f ? false : true; }
+    bool isRelative()  { DBG("Rel");  return *relativeParam   < 0.5f ? false : true; }
+    
 private:
     
     //==============================================================================
@@ -118,15 +122,30 @@ private:
     //==============================================================================
     // the cross-thread parameters that get attached to the
     // parametersTreeState in PluginProcessor.cpp ctor
-    std::atomic<float> *posThreshParam  = nullptr, *negThreshParam  = nullptr, *linkThreshParam = nullptr,
-                       *inputGainParam  = nullptr, *outputGainParam = nullptr;
+    std::atomic<float> *posThreshParam  = nullptr, *negThreshParam   = nullptr,
+                       *linkThreshParam = nullptr, *absoluteParam    = nullptr, *relativeParam = nullptr,
+                       *inputLevelParam = nullptr, *outputLevelParam = nullptr, *gainParam     = nullptr;
     
     std::atomic<bool> linkedThreshold{false};
     
     //==============================================================================
     // for calculating smooth ramping in processBlock()
-    float currPosThresh{1.f},  prevPosThresh{1.f}, currNegThresh{-1.f}, prevNegThresh{-1.f},
-          currInputGain{1.f},  prevInputGain{1.f}, currOutputGain{1.f}, prevOutputGain{1.f};
+    int currSampleRatio;
+    
+    void rampParameter( float param, float& curr, float& prev )
+    {
+        curr = param;
+        
+        if( curr != prev )
+            curr += (prev - curr) * currSampleRatio;
+        
+        else
+            prev = curr;
+    }
+    
+    float currPosThresh{1.f},   prevPosThresh{1.f},  currNegThresh{-1.f},  prevNegThresh{-1.f},
+          currInputLevel{1.f},  prevInputLevel{1.f}, currOutputLevel{1.f}, prevOutputLevel{1.f},
+          currGain{1.f},        prevGain{1.f};
 
 //==============================================================================
 // for testing purposes 
