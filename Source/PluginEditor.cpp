@@ -88,20 +88,21 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     addAndMakeVisible( posAlgoMenu );
     posAlgoMenu.addItem( "Hard Clipping", 1 );
     posAlgoMenu.addItem( "Tanh", 2);
-    
-    posAlgoMenu.onChange = [this] { posAlgoChanged(); };
     posAlgoMenu.setSelectedId(1);
     
+    posAlgoMenuAttachment = std::make_unique<ComboBoxAttachment>( tree, "positive algorithm", posAlgoMenu );
+
+    //posAlgoMenu.onChange = [this] { audioProcessor.setPosAlgo(posAlgoMenu.getSelectedId()); };
     
     addAndMakeVisible( negAlgoLabel );
     negAlgoLabel.setFont( {12.f} );
     
     addAndMakeVisible( negAlgoMenu );
     negAlgoMenu.addItem( "Hard Clipping", 1 );
-    negAlgoMenu.addItem( "Tanh", 2);
-    
-    negAlgoMenu.onChange = [this] { negAlgoChanged(); };
+    negAlgoMenu.addItem( "Tanh", 2 );
     negAlgoMenu.setSelectedId(1);
+    
+    negAlgoMenuAttachment = std::make_unique<ComboBoxAttachment>( tree, "positive algorithm", negAlgoMenu );
     
 //=====================================================================================================
 // METER PANEL
@@ -361,5 +362,5 @@ void CosmicClipperAudioProcessorEditor::timerCallback()
         rmsLevel = juce::Decibels::gainToDecibels( rmsLevel / (float)numChannels );
         outputMeter.update( rmsLevel );
     }
-
+    
 }

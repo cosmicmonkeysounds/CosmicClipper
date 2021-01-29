@@ -67,8 +67,8 @@ public:
     // holds all transfer function info
     enum ClippingTypes
     {
-        HardClipping,
-        SoftClippingTanh,
+        HardClipping = 0,
+        Tanh,
         Strange1
     };
     
@@ -78,7 +78,7 @@ public:
     std::vector< std::function<void(float&)> > transferFuncs
     {
         //==============================================================================
-        // HardClipping
+        // 0. HardClipping
         //==============================================================================
         [this]( float& currentSample )
         {
@@ -90,13 +90,20 @@ public:
         },
         
         //==============================================================================
-        // SoftClippingTanh
+        // 1. Tanh
         //==============================================================================
         [this]( float& currentSample )
         {
-            currentSample = juce::dsp::FastMathApproximations::tanh( currentSample );
+            if( currentSample >= currPosThresh || currentSample <= currNegThresh )
+                currentSample = juce::dsp::FastMathApproximations::tanh( currentSample * (*gainParam) );
         }
     };
+    
+    std::function<void(float&)> posAlgo{transferFuncs[Tanh]};
+    std::function<void(float&)> negAlgo{posAlgo};
+    
+    void setPosAlgo( int type ) { posAlgo = transferFuncs[type-1]; }
+    void setNegAlgo( int type ) { negAlgo = transferFuncs[type-1]; }
     
     AudioBufferQueue<float>& getAudioBufferQueue()
     {
@@ -106,9 +113,11 @@ public:
     float getPosThresh() { return *posThreshParam; }
     float getNegThresh() { return *negThreshParam; }
     
-    bool isNotLinked() { DBG("link"); return *linkThreshParam < 0.5f ? false : true; }
-    bool isAbsolute()  { DBG("ABso"); return *absoluteParam   < 0.5f ? false : true; }
-    bool isRelative()  { DBG("Rel");  return *relativeParam   < 0.5f ? false : true; }
+    bool isThreshFree()      { return *linkThreshParam < 0.5f ? false : true; }
+    bool isThreshAbsolute()  { return *absoluteParam   < 0.5f ? false : true; }
+    bool isThreshRelative()  { return *relativeParam   < 0.5f ? false : true; }
+    
+    bool isAlgoLinked()      { return *algoLinkParam < 0.f ? false : true; }
     
 private:
     
@@ -123,7 +132,7 @@ private:
     // the cross-thread parameters that get attached to the
     // parametersTreeState in PluginProcessor.cpp ctor
     std::atomic<float> *posThreshParam  = nullptr, *negThreshParam   = nullptr,
-                       *linkThreshParam = nullptr, *absoluteParam    = nullptr, *relativeParam = nullptr,
+                       *linkThreshParam = nullptr, *absoluteParam    = nullptr, *relativeParam = nullptr, *algoLinkParam = nullptr,
                        *inputLevelParam = nullptr, *outputLevelParam = nullptr, *gainParam     = nullptr;
     
     std::atomic<bool> linkedThreshold{false};

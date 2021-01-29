@@ -279,31 +279,16 @@ private:
         DBG( name + " changed to " + stateString );
     }
     
+    
+    typedef juce::AudioProcessorValueTreeState::ComboBoxAttachment ComboBoxAttachment;
+    
     juce::Label posAlgoLabel{ {}, "Positive Algo" };
     juce::ComboBox posAlgoMenu;
-    
-    void posAlgoChanged()
-    {
-        switch( posAlgoMenu.getSelectedId() )
-        {
-            case 1: DBG("HARD"); break;
-            case 2: DBG("TANH"); break;
-            default: break;
-        }
-    }
     
     juce::Label negAlgoLabel{ {}, "Negative Algo" };
     juce::ComboBox negAlgoMenu;
     
-    void negAlgoChanged()
-    {
-        switch( negAlgoMenu.getSelectedId() )
-        {
-            case 1: DBG("Neg HARD"); break;
-            case 2: DBG("Neg TANH"); break;
-            default: break;
-        }
-    }
+    std::unique_ptr<ComboBoxAttachment> posAlgoMenuAttachment, negAlgoMenuAttachment;
     
 //================================================================================================
     

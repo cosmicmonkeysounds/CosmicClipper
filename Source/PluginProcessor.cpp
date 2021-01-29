@@ -69,6 +69,8 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
                             "Link Algorithms",
                             true
                         ),
+                        
+                        std::make_unique<juce::AudioParam>(<#_Args &&__args...#>)
             
                         std::make_unique<juce::AudioParameterFloat>
                         (
@@ -108,6 +110,7 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
     linkThreshParam   = parametersTreeState.getRawParameterValue( "unlinked thresholds" );
     absoluteParam     = parametersTreeState.getRawParameterValue( "absolute" );
     relativeParam     = parametersTreeState.getRawParameterValue( "relative" );
+    algoLinkParam     = parametersTreeState.getRawParameterValue( "link algorithms" );
     
     inputLevelParam   = parametersTreeState.getRawParameterValue( "input level" );
     outputLevelParam  = parametersTreeState.getRawParameterValue( "output level" );
@@ -286,7 +289,13 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
             // Transfer Function gets applied to sample
             
             float& sample = channelData[samplePos];
-            transferFuncs[ClippingTypes::HardClipping]( sample );
+            
+            if( sample >= 0.f )
+                posAlgo( sample );
+            
+            else
+                negAlgo( sample );
+            //transferFuncs[ClippingTypes::HardClipping]( sample );
             
             //=======================================================================================
             
