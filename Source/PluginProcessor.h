@@ -67,8 +67,8 @@ public:
     // holds all transfer function info
     enum ClippingTypes
     {
-        HardClipping,
-        SoftClippingTanh,
+        HardClipping = 0,
+        Tanh,
         Strange1
     };
     
@@ -78,37 +78,71 @@ public:
     std::vector< std::function<void(float&)> > transferFuncs
     {
         //==============================================================================
-        // HardClipping
+        // 0. HardClipping
         //==============================================================================
         [this]( float& currentSample )
         {
             if( currentSample > currPosThresh )
-                currentSample = currPosThresh;
+            {
+                float diff = (currentSample - currPosThresh) * posAlgoModifierParam->load();
+                currentSample -= diff;
+            }
                 
             if( currentSample < currNegThresh )
-                currentSample = currNegThresh;
+            {
+                float diff = (currentSample - currNegThresh) * negAlgoModifierParam->load();
+                currentSample -= diff;
+            }
+                
         },
         
         //==============================================================================
-        // SoftClippingTanh
+        // 1. Tanh
         //==============================================================================
         [this]( float& currentSample )
         {
-            currentSample = juce::dsp::FastMathApproximations::tanh( currentSample );
+            if( currentSample > currPosThresh )
+            {
+                float mappedVal = juce::jmap( posAlgoModifierParam->load(),
+                                              0.f, 1.f,
+                                              1.f, 10.f );
+                
+                currentSample = juce::dsp::FastMathApproximations::tanh( currentSample * mappedVal );
+            }
+                
+                
+            if( currentSample < currNegThresh )
+            {
+                float mappedVal = juce::jmap( negAlgoModifierParam->load(),
+                                                0.f, 1.f,
+                                                1.f, 10.f );
+                  
+                currentSample = juce::dsp::FastMathApproximations::tanh( currentSample * mappedVal );
+            }
         }
     };
     
-    AudioBufferQueue<float>& getAudioBufferQueue()
-    {
-        return scopeDataQueue;
-    }
+    ClippingTypes posClippingType, negClippingType = HardClipping;
+    
+    std::function<void(float&)> posAlgo{transferFuncs[HardClipping]};
+    std::function<void(float&)> negAlgo{posAlgo};
+    
+    void setPosAlgo( ClippingTypes type ) { posAlgo = transferFuncs[type]; }
+    void setNegAlgo( ClippingTypes type ) { negAlgo = transferFuncs[type]; }
+    
+    AudioBufferQueue<float>& getAudioBufferQueue() { return scopeDataQueue; }
     
     float getPosThresh() { return *posThreshParam; }
     float getNegThresh() { return *negThreshParam; }
     
-    bool isNotLinked() { DBG("link"); return *linkThreshParam < 0.5f ? false : true; }
-    bool isAbsolute()  { DBG("ABso"); return *absoluteParam   < 0.5f ? false : true; }
-    bool isRelative()  { DBG("Rel");  return *relativeParam   < 0.5f ? false : true; }
+    bool isThreshFree()      { return *linkThreshParam < 0.5f ? false : true; }
+    bool isThreshAbsolute()  { return *absoluteParam   < 0.5f ? false : true; }
+    bool isThreshRelative()  { return *relativeParam   < 0.5f ? false : true; }
+    
+    bool isAlgoLinked()      { return *algoLinkParam < 0.f ? false : true; }
+    
+    int getPosAlgoType() { return (int)posAlgoParam->load(); }
+    int getNegAlgoType() { return (int)negAlgoParam->load(); }
     
 private:
     
@@ -123,8 +157,10 @@ private:
     // the cross-thread parameters that get attached to the
     // parametersTreeState in PluginProcessor.cpp ctor
     std::atomic<float> *posThreshParam  = nullptr, *negThreshParam   = nullptr,
-                       *linkThreshParam = nullptr, *absoluteParam    = nullptr, *relativeParam = nullptr,
-                       *inputLevelParam = nullptr, *outputLevelParam = nullptr, *gainParam     = nullptr;
+                       *linkThreshParam = nullptr, *absoluteParam    = nullptr, *relativeParam = nullptr, *algoLinkParam = nullptr,
+                       *inputLevelParam = nullptr, *outputLevelParam = nullptr, *gainParam     = nullptr,
+                       *posAlgoModifierParam = nullptr, *negAlgoModifierParam = nullptr,
+                       *posAlgoParam    = nullptr, *negAlgoParam     = nullptr;
     
     std::atomic<bool> linkedThreshold{false};
     
