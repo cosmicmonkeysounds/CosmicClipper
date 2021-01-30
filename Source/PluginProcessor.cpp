@@ -69,8 +69,36 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
                             "Link Algorithms",
                             true
                         ),
+            
+                        std::make_unique<juce::AudioParameterFloat>
+                        (
+                            "positive algorithm modifier",
+                            "Positive Algorithm Modifier",
+                            0.f, 1.f, 0.f
+                        ),
+            
+                        std::make_unique<juce::AudioParameterFloat>
+                        (
+                            "negative algorithm modifier",
+                            "Negative Algorithm Modifier",
+                            0.f, 1.f, 0.f
+                        ),
                         
-                        std::make_unique<juce::AudioParam>(<#_Args &&__args...#>)
+                        std::make_unique<juce::AudioParameterFloat>
+                        (
+                            "positive algorithm",
+                            "Positive Algorithm",
+                            juce::NormalisableRange<float>( 0.f, 1.f, 1.f ),
+                            0.f
+                        ),
+            
+                        std::make_unique<juce::AudioParameterFloat>
+                        (
+                            "negative algorithm",
+                            "Negative Algorithm",
+                            juce::NormalisableRange<float>( 0.f, 1.f, 1.f ),
+                            0.f
+                        ),
             
                         std::make_unique<juce::AudioParameterFloat>
                         (
@@ -104,17 +132,23 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
                 // for oscilloscope
             , scopeDataCollector( scopeDataQueue )
 {
-    posThreshParam    = parametersTreeState.getRawParameterValue( "positive threshold" );
-    negThreshParam    = parametersTreeState.getRawParameterValue( "negative threshold" );
+    posThreshParam       = parametersTreeState.getRawParameterValue( "positive threshold" );
+    negThreshParam       = parametersTreeState.getRawParameterValue( "negative threshold" );
     
-    linkThreshParam   = parametersTreeState.getRawParameterValue( "unlinked thresholds" );
-    absoluteParam     = parametersTreeState.getRawParameterValue( "absolute" );
-    relativeParam     = parametersTreeState.getRawParameterValue( "relative" );
-    algoLinkParam     = parametersTreeState.getRawParameterValue( "link algorithms" );
+    linkThreshParam      = parametersTreeState.getRawParameterValue( "unlinked thresholds" );
+    absoluteParam        = parametersTreeState.getRawParameterValue( "absolute" );
+    relativeParam        = parametersTreeState.getRawParameterValue( "relative" );
+    algoLinkParam        = parametersTreeState.getRawParameterValue( "link algorithms" );
     
-    inputLevelParam   = parametersTreeState.getRawParameterValue( "input level" );
-    outputLevelParam  = parametersTreeState.getRawParameterValue( "output level" );
-    gainParam         = parametersTreeState.getRawParameterValue( "gain" );
+    inputLevelParam      = parametersTreeState.getRawParameterValue( "input level" );
+    outputLevelParam     = parametersTreeState.getRawParameterValue( "output level" );
+    gainParam            = parametersTreeState.getRawParameterValue( "gain" );
+    
+    posAlgoModifierParam = parametersTreeState.getRawParameterValue( "positive algorithm modifier" );
+    negAlgoModifierParam = parametersTreeState.getRawParameterValue( "negative algorithm modifier" );
+    
+    posAlgoParam         = parametersTreeState.getRawParameterValue( "positive algorithm" );
+    negAlgoParam         = parametersTreeState.getRawParameterValue( "negative algorithm" );
     
 #if SINE_TEST == 1
     const std::function<float(float)> sineFunc = [](float deg){ return std::sin(deg); };
@@ -269,7 +303,13 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
     buffer.applyGain( currInputLevel );
     inputFifo.push( buffer );
     buffer.applyGain( currGain );
-        
+    
+    posClippingType = (ClippingTypes) posAlgoParam->load();
+    setPosAlgo(posClippingType);
+    
+    negClippingType = (ClippingTypes) negAlgoParam->load();
+    setNegAlgo(negClippingType);
+    
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         float* channelData = buffer.getWritePointer (channel);

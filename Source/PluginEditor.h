@@ -265,7 +265,7 @@ private:
     juce::Rectangle<int> radioButtonPanel;
     
     juce::ToggleButton unlinkedRadio, absoluteRadio, relativeRadio, algoLinkRadio;
-    std::unique_ptr<ButtonAttachment> unlikedThresholdsAttachment, absoluteAttachment, relativeAttachment, algoLinkAttachment;
+    std::unique_ptr<ButtonAttachment> unlinkedThresholdsAttachment, absoluteAttachment, relativeAttachment, algoLinkAttachment;
     
     enum RadioButtons
     {
@@ -307,6 +307,12 @@ private:
     juce::Rectangle<int> algoControlArea;
     juce::Rectangle<int> radioButtonArea;
     juce::Rectangle<int> comboBoxArea;
+    
+    CosmicKnob posAlgoModKnob{ "" };
+    std::unique_ptr<SliderAttachment> posAlgoModAttachment;
+    
+    CosmicKnob negAlgoModKnob{ "" };
+    std::unique_ptr<SliderAttachment> negAlgoModAttachment;
     
 //================================================================================================
     

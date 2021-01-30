@@ -39,17 +39,21 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     
     addAndMakeVisible( unlinkedRadio );
     unlinkedRadio.setRadioGroupId( LinkedButtons );
-    unlikedThresholdsAttachment = std::make_unique<ButtonAttachment>( tree, "unlinked thresholds", unlinkedRadio );
+    unlinkedThresholdsAttachment = std::make_unique<ButtonAttachment>( tree, "unlinked thresholds", unlinkedRadio );
+    unlinkedRadio.setToggleState( audioProcessor.isThreshFree(), juce::NotificationType::sendNotification );
+    
     unlinkedRadio.onClick = [&]
     {
         updateToggleState( &unlinkedRadio, "unlinked thresholds" );
-        posSlider.onValueChange = [&] { };//posSlider.setValue(posSlider.getValue()); };
-        negSlider.onValueChange = [&] { };//negSlider.setValue(negSlider.getValue()); };
+        posSlider.onValueChange = [&] { };
+        negSlider.onValueChange = [&] { };
     };
     
     addAndMakeVisible( absoluteRadio );
     absoluteRadio.setRadioGroupId( LinkedButtons );
-    //absoluteAttachment = std::make_unique<ButtonAttachment>( tree, "absolute", absoluteRadio );
+    //absoluteRadio.setEnabled( audioProcessor.isThreshAbsolute() );
+    absoluteRadio.setToggleState( audioProcessor.isThreshAbsolute(), juce::NotificationType::sendNotification );
+    
     absoluteRadio.onClick = [&]
     {
         updateToggleState( &absoluteRadio, "absolute" );
@@ -59,7 +63,8 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     
     addAndMakeVisible( relativeRadio );
     relativeRadio.setRadioGroupId( LinkedButtons );
-    //relativeAttachment = std::make_unique<ButtonAttachment>( tree, "relative", relativeRadio );
+    relativeRadio.setToggleState( audioProcessor.isThreshRelative(), juce::NotificationType::sendNotification );
+    
     relativeRadio.onClick = [&]
     {
         updateToggleState( &relativeRadio, "relative" );
@@ -81,6 +86,25 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     
     addAndMakeVisible( algoLinkRadio );
     algoLinkAttachment = std::make_unique<ButtonAttachment>( tree, "link algorithms", algoLinkRadio );
+    algoLinkRadio.setEnabled( audioProcessor.isAlgoLinked() );
+    
+    addAndMakeVisible( posAlgoModKnob );
+    posAlgoModAttachment = std::make_unique<SliderAttachment>( tree, "positive algorithm modifier", posAlgoModKnob.knob );
+    
+    posAlgoModKnob.knob.onValueChange = [this]
+    {
+        if( algoLinkRadio.getToggleState() )
+            negAlgoModKnob.knob.setValue( posAlgoModKnob.knob.getValue() );
+    };
+    
+    addAndMakeVisible( negAlgoModKnob );
+    negAlgoModAttachment = std::make_unique<SliderAttachment>( tree, "negative algorithm modifier", negAlgoModKnob.knob );
+    
+    negAlgoModKnob.knob.onValueChange = [this]
+    {
+        if( algoLinkRadio.getToggleState() )
+            posAlgoModKnob.knob.setValue( negAlgoModKnob.knob.getValue() );
+    };
     
     addAndMakeVisible( posAlgoLabel );
     posAlgoLabel.setFont( {12.f} );
@@ -88,11 +112,16 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     addAndMakeVisible( posAlgoMenu );
     posAlgoMenu.addItem( "Hard Clipping", 1 );
     posAlgoMenu.addItem( "Tanh", 2);
-    posAlgoMenu.setSelectedId(1);
     
     posAlgoMenuAttachment = std::make_unique<ComboBoxAttachment>( tree, "positive algorithm", posAlgoMenu );
+    posAlgoMenu.setSelectedId( audioProcessor.getPosAlgoType() + 1 );
 
-    //posAlgoMenu.onChange = [this] { audioProcessor.setPosAlgo(posAlgoMenu.getSelectedId()); };
+    posAlgoMenu.onChange = [this]
+    {
+        if( algoLinkRadio.getToggleState() )
+            negAlgoMenu.setSelectedId( posAlgoMenu.getSelectedId() );
+            
+    };
     
     addAndMakeVisible( negAlgoLabel );
     negAlgoLabel.setFont( {12.f} );
@@ -100,9 +129,15 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     addAndMakeVisible( negAlgoMenu );
     negAlgoMenu.addItem( "Hard Clipping", 1 );
     negAlgoMenu.addItem( "Tanh", 2 );
-    negAlgoMenu.setSelectedId(1);
     
-    negAlgoMenuAttachment = std::make_unique<ComboBoxAttachment>( tree, "positive algorithm", negAlgoMenu );
+    negAlgoMenuAttachment = std::make_unique<ComboBoxAttachment>( tree, "negative algorithm", negAlgoMenu );
+    negAlgoMenu.setSelectedId( audioProcessor.getNegAlgoType() + 1 );
+    
+    negAlgoMenu.onChange = [this]
+    {
+        if( algoLinkRadio.getToggleState() )
+            posAlgoMenu.setSelectedId( negAlgoMenu.getSelectedId() );
+    };
     
 //=====================================================================================================
 // METER PANEL
@@ -187,14 +222,14 @@ void CosmicClipperAudioProcessorEditor::paint( juce::Graphics& g )
     
     int posSliderTop = posThreshSlider.getBounds().getY();
     
-    g.drawText( "Positive Threshold Control",
+    g.drawText( "Positive Threshold Algorithm",
                 algoControlArea.getX(), posSliderTop,
                 algoControlArea.getWidth(), 20,
                 juce::Justification::centred );
     
     int negSliderBottom = negThreshSlider.getBounds().getY() + negThreshSlider.getBounds().getHeight() - 30;
     
-    g.drawText( "Negative Threshold Control",
+    g.drawText( "Negative Threshold Algorithm",
                 algoControlArea.getX(), negSliderBottom,
                 algoControlArea.getWidth(), 20,
                 juce::Justification::centred );
@@ -254,7 +289,7 @@ void CosmicClipperAudioProcessorEditor::resized()
     algoControlArea = topBox.withTrimmedLeft( posThreshSlider.getWidth() )
                             .reduced( innerWindowPadding );
     
-    radioButtonArea = algoControlArea.withSizeKeepingCentre( topBox.getWidth()/1.5f, topBox.getHeight()/5 );
+    radioButtonArea = algoControlArea.withSizeKeepingCentre( topBox.getWidth()/1.5f, topBox.getHeight()/8 );
     
     auto btnArea = radioButtonArea;
     const int divisions = 4;
@@ -266,10 +301,18 @@ void CosmicClipperAudioProcessorEditor::resized()
     algoLinkRadio.setBounds( btnArea.removeFromLeft(divWidth) );
     
     auto posArea = algoControlArea.withTrimmedBottom( radioButtonArea.getY()+radioButtonArea.getHeight() );
-    posAlgoMenu.setBounds( posArea.withSizeKeepingCentre(radioButtonArea.getWidth()/1.5f, btnArea.getHeight()/2) );
+    posAlgoMenu.setBounds( posArea.withSizeKeepingCentre(radioButtonArea.getWidth()/1.5f, btnArea.getHeight()/3)
+                                  .translated(0, -40) );
+    
+    posAlgoModKnob.setBounds( posArea.reduced(12)
+                                     .translated(0, 50) );
     
     auto negArea = algoControlArea.withTrimmedTop( radioButtonArea.getY()+radioButtonArea.getHeight() );
-    negAlgoMenu.setBounds( negArea.withSizeKeepingCentre(radioButtonArea.getWidth()/1.5f, btnArea.getHeight()/2) );
+    negAlgoMenu.setBounds( negArea.withSizeKeepingCentre(radioButtonArea.getWidth()/1.5f, btnArea.getHeight()/3)
+                                  .translated(0, 32) );
+    
+    negAlgoModKnob.setBounds( negArea.reduced(12)
+                                     .translated(0, -30) );
 
 //=====================================================================================================
 

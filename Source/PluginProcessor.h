@@ -83,10 +83,17 @@ public:
         [this]( float& currentSample )
         {
             if( currentSample > currPosThresh )
-                currentSample = currPosThresh;
+            {
+                float diff = (currentSample - currPosThresh) * posAlgoModifierParam->load();
+                currentSample -= diff;
+            }
                 
             if( currentSample < currNegThresh )
-                currentSample = currNegThresh;
+            {
+                float diff = (currentSample - currNegThresh) * negAlgoModifierParam->load();
+                currentSample -= diff;
+            }
+                
         },
         
         //==============================================================================
@@ -94,21 +101,36 @@ public:
         //==============================================================================
         [this]( float& currentSample )
         {
-            if( currentSample >= currPosThresh || currentSample <= currNegThresh )
-                currentSample = juce::dsp::FastMathApproximations::tanh( currentSample * (*gainParam) );
+            if( currentSample > currPosThresh )
+            {
+                float mappedVal = juce::jmap( posAlgoModifierParam->load(),
+                                              0.f, 1.f,
+                                              1.f, 10.f );
+                
+                currentSample = juce::dsp::FastMathApproximations::tanh( currentSample * mappedVal );
+            }
+                
+                
+            if( currentSample < currNegThresh )
+            {
+                float mappedVal = juce::jmap( negAlgoModifierParam->load(),
+                                                0.f, 1.f,
+                                                1.f, 10.f );
+                  
+                currentSample = juce::dsp::FastMathApproximations::tanh( currentSample * mappedVal );
+            }
         }
     };
     
-    std::function<void(float&)> posAlgo{transferFuncs[Tanh]};
+    ClippingTypes posClippingType, negClippingType = HardClipping;
+    
+    std::function<void(float&)> posAlgo{transferFuncs[HardClipping]};
     std::function<void(float&)> negAlgo{posAlgo};
     
-    void setPosAlgo( int type ) { posAlgo = transferFuncs[type-1]; }
-    void setNegAlgo( int type ) { negAlgo = transferFuncs[type-1]; }
+    void setPosAlgo( ClippingTypes type ) { posAlgo = transferFuncs[type]; }
+    void setNegAlgo( ClippingTypes type ) { negAlgo = transferFuncs[type]; }
     
-    AudioBufferQueue<float>& getAudioBufferQueue()
-    {
-        return scopeDataQueue;
-    }
+    AudioBufferQueue<float>& getAudioBufferQueue() { return scopeDataQueue; }
     
     float getPosThresh() { return *posThreshParam; }
     float getNegThresh() { return *negThreshParam; }
@@ -118,6 +140,9 @@ public:
     bool isThreshRelative()  { return *relativeParam   < 0.5f ? false : true; }
     
     bool isAlgoLinked()      { return *algoLinkParam < 0.f ? false : true; }
+    
+    int getPosAlgoType() { return (int)posAlgoParam->load(); }
+    int getNegAlgoType() { return (int)negAlgoParam->load(); }
     
 private:
     
@@ -133,7 +158,9 @@ private:
     // parametersTreeState in PluginProcessor.cpp ctor
     std::atomic<float> *posThreshParam  = nullptr, *negThreshParam   = nullptr,
                        *linkThreshParam = nullptr, *absoluteParam    = nullptr, *relativeParam = nullptr, *algoLinkParam = nullptr,
-                       *inputLevelParam = nullptr, *outputLevelParam = nullptr, *gainParam     = nullptr;
+                       *inputLevelParam = nullptr, *outputLevelParam = nullptr, *gainParam     = nullptr,
+                       *posAlgoModifierParam = nullptr, *negAlgoModifierParam = nullptr,
+                       *posAlgoParam    = nullptr, *negAlgoParam     = nullptr;
     
     std::atomic<bool> linkedThreshold{false};
     
