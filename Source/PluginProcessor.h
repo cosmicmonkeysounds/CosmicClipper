@@ -8,13 +8,15 @@
 
 #pragma once
 
-#define SINE_TEST 1
+#define SINE_TEST 0
 
 #include <JuceHeader.h>
 
 #include "ScopeComponent.h"
 #include "Fifo.h"
 
+#define NEGATIVE_INFINITY_DB -66.f
+#define MAX_DB 12.f
 
 class CosmicClipperAudioProcessor  : public juce::AudioProcessor
 {
@@ -69,7 +71,7 @@ public:
     {
         HardClipping = 0,
         Tanh,
-        Strange1
+        Sinx
     };
     
     
@@ -119,7 +121,27 @@ public:
                   
                 currentSample = juce::dsp::FastMathApproximations::tanh( currentSample * mappedVal );
             }
+        },
+        
+        //==============================================================================
+        // 1. Sinx
+        //==============================================================================
+        [this]( float& currentSample )
+        {
+            if( currentSample > currPosThresh )
+            {
+                float mod = juce::jmap( posAlgoModifierParam->load(), 0.f, 1.f, 1.f, 10.f );
+                currentSample = ( juce::dsp::FastMathApproximations::sin(mod * currentSample) );
+            }
+                
+            if( currentSample < currNegThresh )
+            {
+                float mod = juce::jmap( negAlgoModifierParam->load(), 0.f, 1.f, 1.f, 10.f );
+                currentSample = ( juce::dsp::FastMathApproximations::sin(mod * currentSample) );
+            }
+
         }
+        
     };
     
     ClippingTypes posClippingType, negClippingType = HardClipping;

@@ -40,7 +40,6 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     addAndMakeVisible( unlinkedRadio );
     unlinkedRadio.setRadioGroupId( LinkedButtons );
     unlinkedThresholdsAttachment = std::make_unique<ButtonAttachment>( tree, "unlinked thresholds", unlinkedRadio );
-    unlinkedRadio.setToggleState( audioProcessor.isThreshFree(), juce::NotificationType::sendNotification );
     
     unlinkedRadio.onClick = [&]
     {
@@ -51,8 +50,6 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     
     addAndMakeVisible( absoluteRadio );
     absoluteRadio.setRadioGroupId( LinkedButtons );
-    //absoluteRadio.setEnabled( audioProcessor.isThreshAbsolute() );
-    absoluteRadio.setToggleState( audioProcessor.isThreshAbsolute(), juce::NotificationType::sendNotification );
     
     absoluteRadio.onClick = [&]
     {
@@ -111,7 +108,8 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     
     addAndMakeVisible( posAlgoMenu );
     posAlgoMenu.addItem( "Hard Clipping", 1 );
-    posAlgoMenu.addItem( "Tanh", 2);
+    posAlgoMenu.addItem( "Tanh", 2 );
+    posAlgoMenu.addItem( "Sinx", 3 );
     
     posAlgoMenuAttachment = std::make_unique<ComboBoxAttachment>( tree, "positive algorithm", posAlgoMenu );
     posAlgoMenu.setSelectedId( audioProcessor.getPosAlgoType() + 1 );
@@ -129,6 +127,7 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     addAndMakeVisible( negAlgoMenu );
     negAlgoMenu.addItem( "Hard Clipping", 1 );
     negAlgoMenu.addItem( "Tanh", 2 );
+    negAlgoMenu.addItem( "Sinx", 3 );
     
     negAlgoMenuAttachment = std::make_unique<ComboBoxAttachment>( tree, "negative algorithm", negAlgoMenu );
     negAlgoMenu.setSelectedId( audioProcessor.getNegAlgoType() + 1 );
@@ -146,7 +145,35 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     inputMeter.withBackgroundColour( myColours[Colours::PINK_DARK] )
               .withMeterColour( myColours[Colours::PINK_LIGHT] );
     
+    
+    addAndMakeVisible( inputLevelSlider );
+    inputLevelSlider.setSliderStyle( juce::Slider::SliderStyle::LinearVertical );
+    inputLevelSlider.setTextBoxStyle( juce::Slider::NoTextBox, true, 100, 50 );
+    
+//    juce::NormalisableRange<double> logDB{ juce::Decibels::decibelsToGain(NEGATIVE_INFINITY_DB),
+//                                          juce::Decibels::decibelsToGain(MAX_DB),
+//                                          1.f, 0.5f };
+//
+//    inputLevelSlider.setNormalisableRange( logDB );
+    
+    inputLevelSlider.setSkewFactor( 0.1 );
+    DBG("skew: " << inputLevelSlider.getSkewFactor());
+    
+    //inputLevelSlider.onValueChange = [this] { DBG(inputLevelSlider.getValue()); };
+    
+    //inputLevelSlider.setRange( 0.f, 10.f );
+    
+    inputLevelAttachment = std::make_unique<SliderAttachment>( tree, "input level", inputLevelSlider );
+    
     addAndMakeVisible( dbScale );
+    
+    addAndMakeVisible( outputLevelSlider );
+    outputLevelSlider.setSliderStyle( juce::Slider::SliderStyle::LinearVertical );
+    outputLevelSlider.setTextBoxStyle( juce::Slider::NoTextBox, true, 100, 50 );
+    outputLevelSlider.setRange( juce::Decibels::decibelsToGain(NEGATIVE_INFINITY_DB),
+                                juce::Decibels::decibelsToGain(MAX_DB) );
+    
+    outputLevelAttachment = std::make_unique<SliderAttachment>( tree, "output level", outputLevelSlider );
     
     addAndMakeVisible( outputMeter );
     outputMeter.withBackgroundColour( myColours[Colours::PINK_DARK] )
@@ -234,6 +261,16 @@ void CosmicClipperAudioProcessorEditor::paint( juce::Graphics& g )
                 algoControlArea.getWidth(), 20,
                 juce::Justification::centred );
     
+    int inputTextX = inputMeter.getX() + ((inputLevelSlider.getX() - inputMeter.getX()) / 2) - 20;
+    int inputTextY = inputMeter.getY() - 20;
+    
+    g.drawText( "Input Level", inputTextX - 10, inputTextY, 100, 10, juce::Justification::centred );
+    
+    int outputTextX = outputMeter.getX() + ((outputLevelSlider.getX() - outputMeter.getX()) / 2) - 20;
+    int outputTextY = outputMeter.getY() - 20;
+    
+    g.drawText( "Output Level", outputTextX + 10, outputTextY, 100, 10, juce::Justification::centred );
+    
 }
 
 void CosmicClipperAudioProcessorEditor::resized()
@@ -320,15 +357,28 @@ void CosmicClipperAudioProcessorEditor::resized()
                   .reduced( 0, innerWindowPadding )
                   .translated( -innerWindowPadding/2 , innerWindowPadding );
     
-    auto meterArea = meterPanel.reduced( innerWindowPadding * 3 );
+    auto meterArea = meterPanel.reduced(innerWindowPadding * 3).withTrimmedTop(20);
     
     float meterAreaSpacing = meterArea.getWidth() / 5.f;
     
     inputMeter.setBounds( meterArea.removeFromLeft(meterAreaSpacing) );
     
+    inputLevelSlider.setBounds( meterArea.removeFromLeft(meterAreaSpacing)
+                                         .withHeight(meterArea.getHeight() * 1.1)
+                                         .translated(0, -meterArea.getHeight() * 0.05) );
+    
+    
+    meterArea.removeFromLeft(meterAreaSpacing);
+    
     dbScale.ticks   = inputMeter.ticks;
     dbScale.yOffset = inputMeter.getY();
-    dbScale.setBounds( meterArea.removeFromLeft(meterAreaSpacing) );
+    dbScale.setBounds( inputLevelSlider.getRight() + innerWindowPadding, 0, 30, getHeight() );
+    
+    dbScale.toBack();
+    
+    outputLevelSlider.setBounds( meterArea.removeFromLeft(meterAreaSpacing)
+                                          .withHeight(meterArea.getHeight() * 1.1)
+                                          .translated(0, -meterArea.getHeight() * 0.05) );
     
     outputMeter.setBounds( meterArea );
     

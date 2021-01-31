@@ -113,7 +113,7 @@ public:
     
     void paint( juce::Graphics& g ) override
     {
-        juce::Font f{ juce::Font::getDefaultMonospacedFontName(), 14.f, juce::Font::FontStyleFlags::plain };
+        juce::Font f{ juce::Font::getDefaultMonospacedFontName(), 10.f, juce::Font::FontStyleFlags::plain };
         g.setColour( juce::Colours::whitesmoke );
         g.setFont( f );
         

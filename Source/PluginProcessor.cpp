@@ -88,7 +88,7 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
                         (
                             "positive algorithm",
                             "Positive Algorithm",
-                            juce::NormalisableRange<float>( 0.f, 1.f, 1.f ),
+                            juce::NormalisableRange<float>( 0.f, 2.f, 1.f ),
                             0.f
                         ),
             
@@ -96,7 +96,7 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
                         (
                             "negative algorithm",
                             "Negative Algorithm",
-                            juce::NormalisableRange<float>( 0.f, 1.f, 1.f ),
+                            juce::NormalisableRange<float>( 0.f, 2.f, 1.f ),
                             0.f
                         ),
             
@@ -113,18 +113,22 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
                         (
                             "input level",
                             "Input Level",
-                            0.f,
-                            10.f,
-                            1.f
+                            juce::NormalisableRange<float>( juce::Decibels::decibelsToGain(NEGATIVE_INFINITY_DB),
+                                                            juce::Decibels::decibelsToGain(MAX_DB),
+                                                            0.0000001, 0.1 ),
+                         
+                            juce::Decibels::decibelsToGain( -3.f )
                         ),
             
                         std::make_unique<juce::AudioParameterFloat>
                         (
                             "output level",
                             "Output Level",
-                            0.f,
-                            10.f,
-                            1.f
+                            juce::NormalisableRange<float>( juce::Decibels::decibelsToGain(NEGATIVE_INFINITY_DB),
+                                                            juce::Decibels::decibelsToGain(MAX_DB),
+                                                            0.0000001, 0.1 ),
+                         
+                            juce::Decibels::decibelsToGain( -3.f )
                         )
             
                    }) // end of parameter (AudioValueTree) initialization
@@ -318,7 +322,6 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
         {
             currSampleRatio = samplePos / numSamples;
             
-
             rampParameter( *posThreshParam, currPosThresh, prevPosThresh );
             rampParameter( -(*negThreshParam), currNegThresh, prevNegThresh );
             rampParameter( *inputLevelParam, currInputLevel, prevInputLevel );
@@ -349,7 +352,7 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
     outputFifo.push( buffer );
     
 #if SINE_TEST == 1
-    buffer.clear();
+    //buffer.clear();
 #endif
     
 } // end of process block
