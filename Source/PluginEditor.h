@@ -174,9 +174,7 @@ private:
             slider.setBounds( getLocalBounds() );
             
             if( flipped )
-            {
                 slider.setTransform( juce::AffineTransform::verticalFlip(slider.getHeight()) );
-            }
         }
     };
     
@@ -323,6 +321,12 @@ private:
     
     Meter inputMeter, outputMeter;
     DB_Scale dbScale;
+    
+    juce::Slider inputLevelSlider;
+    std::unique_ptr<SliderAttachment> inputLevelAttachment;
+    
+    juce::Slider outputLevelSlider;
+    std::unique_ptr<SliderAttachment> outputLevelAttachment;
     
 //================================================================================================
     
