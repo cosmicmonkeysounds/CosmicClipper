@@ -88,7 +88,7 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
                         (
                             "positive algorithm",
                             "Positive Algorithm",
-                            juce::NormalisableRange<float>( 0.f, 2.f, 1.f ),
+                            juce::NormalisableRange<float>( 0.f, 3.f, 1.f ),
                             0.f
                         ),
             
@@ -96,14 +96,23 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
                         (
                             "negative algorithm",
                             "Negative Algorithm",
-                            juce::NormalisableRange<float>( 0.f, 2.f, 1.f ),
+                            juce::NormalisableRange<float>( 0.f, 3.f, 1.f ),
                             0.f
                         ),
             
                         std::make_unique<juce::AudioParameterFloat>
                         (
-                            "gain",
-                            "Gain",
+                            "pos gain",
+                            "Positive Gain",
+                            1.f,
+                            10.f,
+                            1.f
+                        ),
+            
+                        std::make_unique<juce::AudioParameterFloat>
+                        (
+                            "neg gain",
+                            "Negative Gain",
                             1.f,
                             10.f,
                             1.f
@@ -146,7 +155,8 @@ CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
     
     inputLevelParam      = parametersTreeState.getRawParameterValue( "input level" );
     outputLevelParam     = parametersTreeState.getRawParameterValue( "output level" );
-    gainParam            = parametersTreeState.getRawParameterValue( "gain" );
+    posGainParam         = parametersTreeState.getRawParameterValue( "pos gain" );
+    negGainParam         = parametersTreeState.getRawParameterValue( "neg gain" );
     
     posAlgoModifierParam = parametersTreeState.getRawParameterValue( "positive algorithm modifier" );
     negAlgoModifierParam = parametersTreeState.getRawParameterValue( "negative algorithm modifier" );
@@ -278,17 +288,12 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
-
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
-
     int numSamples = buffer.getNumSamples();
+
+    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+        buffer.clear (i, 0, numSamples);
+
+    
     
 #if SINE_TEST == 1
     testOscillator.setFrequency( 60.f );
@@ -306,7 +311,6 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
     
     buffer.applyGain( currInputLevel );
     inputFifo.push( buffer );
-    buffer.applyGain( currGain );
     
     posClippingType = (ClippingTypes) posAlgoParam->load();
     setPosAlgo(posClippingType);
@@ -326,7 +330,8 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
             rampParameter( -(*negThreshParam), currNegThresh, prevNegThresh );
             rampParameter( *inputLevelParam, currInputLevel, prevInputLevel );
             rampParameter( *outputLevelParam, currOutputLevel, prevOutputLevel );
-            rampParameter( *gainParam, currGain, prevGain );
+            rampParameter( *posGainParam, currPosGain, prevPosGain );
+            rampParameter( *negGainParam, currNegGain, prevNegGain );
             
             //=======================================================================================
             // Transfer Function gets applied to sample
@@ -334,11 +339,22 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
             float& sample = channelData[samplePos];
             
             if( sample >= 0.f )
+            {
+                sample *= currPosGain;
                 posAlgo( sample );
-            
+                
+                if( sample > 1.f )
+                    sample = 1.f;
+            }
+                
             else
+            {
+                sample *= currNegGain;
                 negAlgo( sample );
-            //transferFuncs[ClippingTypes::HardClipping]( sample );
+                
+                if( sample < -1.f )
+                    sample = -1.f;
+            }
             
             //=======================================================================================
             

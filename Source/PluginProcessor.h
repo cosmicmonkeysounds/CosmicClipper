@@ -71,7 +71,8 @@ public:
     {
         HardClipping = 0,
         Tanh,
-        Sinx
+        Sinx,
+        Cosx
     };
     
     
@@ -95,7 +96,6 @@ public:
                 float diff = (currentSample - currNegThresh) * negAlgoModifierParam->load();
                 currentSample -= diff;
             }
-                
         },
         
         //==============================================================================
@@ -105,41 +105,60 @@ public:
         {
             if( currentSample > currPosThresh )
             {
-                float mappedVal = juce::jmap( posAlgoModifierParam->load(),
-                                              0.f, 1.f,
-                                              1.f, 10.f );
-                
-                currentSample = juce::dsp::FastMathApproximations::tanh( currentSample * mappedVal );
+                float mappedVal = juce::jmap( posAlgoModifierParam->load(), 0.f, 1.f, 1.f, 10.f );
+                currentSample = std::tanh( currentSample * mappedVal );
             }
-                
                 
             if( currentSample < currNegThresh )
             {
-                float mappedVal = juce::jmap( negAlgoModifierParam->load(),
-                                                0.f, 1.f,
-                                                1.f, 10.f );
-                  
-                currentSample = juce::dsp::FastMathApproximations::tanh( currentSample * mappedVal );
+                float mappedVal = juce::jmap( negAlgoModifierParam->load(), 0.f, 1.f, 1.f, 10.f );
+                currentSample = std::tanh( currentSample * mappedVal );
             }
         },
         
         //==============================================================================
-        // 1. Sinx
+        // 2. Sinx
         //==============================================================================
         [this]( float& currentSample )
         {
             if( currentSample > currPosThresh )
             {
-                float mod = juce::jmap( posAlgoModifierParam->load(), 0.f, 1.f, 1.f, 10.f );
-                currentSample = ( juce::dsp::FastMathApproximations::sin(mod * currentSample) );
+                currentSample /= currPosGain;
+                float g = juce::jmap( currPosGain, 1.f, 10.f, 0.f, 1.f );
+                float mod = juce::jmap( posAlgoModifierParam->load(), 0.f, 1.f, 0.f, 100.f );
+                currentSample -= ( g * std::sin(mod * currentSample) );
             }
                 
             if( currentSample < currNegThresh )
             {
-                float mod = juce::jmap( negAlgoModifierParam->load(), 0.f, 1.f, 1.f, 10.f );
-                currentSample = ( juce::dsp::FastMathApproximations::sin(mod * currentSample) );
+                currentSample /= currNegGain;
+                float g = juce::jmap( currNegGain, 1.f, 10.f, 0.f, 1.f );
+                float mod = juce::jmap( negAlgoModifierParam->load(), 0.f, 1.f, 1.f, 100.f );
+                currentSample -= ( g * std::sin(mod * currentSample) );
             }
 
+        },
+        
+        //==============================================================================
+        // 3. Cosx
+        //==============================================================================
+        [this]( float& currentSample )
+        {
+            if( currentSample > currPosThresh )
+            {
+                currentSample /= currPosGain;
+                float g = juce::jmap( currPosGain, 1.f, 10.f, 0.1f, 1.f );
+                float mod = juce::jmap( posAlgoModifierParam->load(), 0.f, 1.f, 0.f, 100.f );
+                currentSample *= ( g * std::cos(mod * currentSample) );
+            }
+                
+            if( currentSample < currNegThresh )
+            {
+                currentSample /= currNegGain;
+                float g = juce::jmap( currNegGain, 1.f, 10.f, 0.1f, 1.f );
+                float mod = juce::jmap( negAlgoModifierParam->load(), 0.f, 1.f, 1.f, 100.f );
+                currentSample *= ( g * std::cos(mod * currentSample) );
+            }
         }
         
     };
@@ -180,9 +199,9 @@ private:
     // parametersTreeState in PluginProcessor.cpp ctor
     std::atomic<float> *posThreshParam  = nullptr, *negThreshParam   = nullptr,
                        *linkThreshParam = nullptr, *absoluteParam    = nullptr, *relativeParam = nullptr, *algoLinkParam = nullptr,
-                       *inputLevelParam = nullptr, *outputLevelParam = nullptr, *gainParam     = nullptr,
-                       *posAlgoModifierParam = nullptr, *negAlgoModifierParam = nullptr,
-                       *posAlgoParam    = nullptr, *negAlgoParam     = nullptr;
+                       *inputLevelParam = nullptr, *outputLevelParam = nullptr, *posGainParam  = nullptr, *negGainParam  = nullptr,
+                       *posAlgoParam    = nullptr, *negAlgoParam     = nullptr,
+                       *posAlgoModifierParam = nullptr, *negAlgoModifierParam = nullptr;
     
     std::atomic<bool> linkedThreshold{false};
     
@@ -203,7 +222,7 @@ private:
     
     float currPosThresh{1.f},   prevPosThresh{1.f},  currNegThresh{-1.f},  prevNegThresh{-1.f},
           currInputLevel{1.f},  prevInputLevel{1.f}, currOutputLevel{1.f}, prevOutputLevel{1.f},
-          currGain{1.f},        prevGain{1.f};
+          currPosGain{1.f},     prevPosGain{1.f},    currNegGain{1.f},     prevNegGain{1.f};
 
 //==============================================================================
 // for testing purposes 
