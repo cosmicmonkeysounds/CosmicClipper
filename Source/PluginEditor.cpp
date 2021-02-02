@@ -68,16 +68,14 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
         
         posSlider.onValueChange = [&]
         {
-            DBG( "negSlider: " << negSlider.getValue() );
-            DBG( "posSlider: " << posSlider.getValue() );
-            auto val = negSlider.getValue() - (1.0 - posSlider.getValue());
-            negSlider.setValue( val );
+            auto val = negSlider.getValue();
+            negSlider.setValue( val - posSlider.getValue() );
         };
         
         negSlider.onValueChange = [&]
         {
-            auto val = posSlider.getValue() - (1.0 - negSlider.getValue());
-            posSlider.setValue( val );
+            auto val = posSlider.getValue();
+            posSlider.setValue( val - negSlider.getValue() );
         };
     };
     
@@ -110,6 +108,7 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     posAlgoMenu.addItem( "Hard Clipping", 1 );
     posAlgoMenu.addItem( "Tanh", 2 );
     posAlgoMenu.addItem( "Sinx", 3 );
+    posAlgoMenu.addItem( "Cosx", 4 );
     
     posAlgoMenuAttachment = std::make_unique<ComboBoxAttachment>( tree, "positive algorithm", posAlgoMenu );
     posAlgoMenu.setSelectedId( audioProcessor.getPosAlgoType() + 1 );
@@ -118,7 +117,6 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     {
         if( algoLinkRadio.getToggleState() )
             negAlgoMenu.setSelectedId( posAlgoMenu.getSelectedId() );
-            
     };
     
     addAndMakeVisible( negAlgoLabel );
@@ -128,6 +126,7 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     negAlgoMenu.addItem( "Hard Clipping", 1 );
     negAlgoMenu.addItem( "Tanh", 2 );
     negAlgoMenu.addItem( "Sinx", 3 );
+    negAlgoMenu.addItem( "Cosx", 4 );
     
     negAlgoMenuAttachment = std::make_unique<ComboBoxAttachment>( tree, "negative algorithm", negAlgoMenu );
     negAlgoMenu.setSelectedId( audioProcessor.getNegAlgoType() + 1 );
@@ -149,20 +148,7 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
     addAndMakeVisible( inputLevelSlider );
     inputLevelSlider.setSliderStyle( juce::Slider::SliderStyle::LinearVertical );
     inputLevelSlider.setTextBoxStyle( juce::Slider::NoTextBox, true, 100, 50 );
-    
-//    juce::NormalisableRange<double> logDB{ juce::Decibels::decibelsToGain(NEGATIVE_INFINITY_DB),
-//                                          juce::Decibels::decibelsToGain(MAX_DB),
-//                                          1.f, 0.5f };
-//
-//    inputLevelSlider.setNormalisableRange( logDB );
-    
     inputLevelSlider.setSkewFactor( 0.1 );
-    DBG("skew: " << inputLevelSlider.getSkewFactor());
-    
-    //inputLevelSlider.onValueChange = [this] { DBG(inputLevelSlider.getValue()); };
-    
-    //inputLevelSlider.setRange( 0.f, 10.f );
-    
     inputLevelAttachment = std::make_unique<SliderAttachment>( tree, "input level", inputLevelSlider );
     
     addAndMakeVisible( dbScale );
@@ -182,10 +168,11 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
 //=====================================================================================================
 // CONTROL PANEL
     
-    addAndMakeVisible( gainKnob );
-    gainKnobAttachment = std::make_unique<SliderAttachment>( tree,
-                                                             "gain",
-                                                             gainKnob.knob );
+    addAndMakeVisible( posGainKnob );
+    posGainAttachment = std::make_unique<SliderAttachment>( tree, "pos gain", posGainKnob.knob );
+    
+    addAndMakeVisible( negGainKnob );
+    negGainAttachment = std::make_unique<SliderAttachment>( tree, "neg gain", negGainKnob.knob );
     
 //=====================================================================================================
         
@@ -389,7 +376,10 @@ void CosmicClipperAudioProcessorEditor::resized()
     
     auto knobPanel = controlPanel.reduced( innerWindowPadding );
     
-    gainKnob.setBounds(  knobPanel.removeFromLeft(knobPanel.getCentreX()) );
+    int knobPanelDiv = knobPanel.getWidth() / 2;
+    
+    posGainKnob.setBounds( knobPanel.removeFromLeft(knobPanelDiv) );
+    negGainKnob.setBounds( knobPanel.removeFromLeft(knobPanelDiv) );
     
 //=====================================================================================================
     
