@@ -332,8 +332,11 @@ private:
     
     juce::Rectangle<int> controlPanel;
     
-    CosmicKnob gainKnob{ "GAIN" };
-    std::unique_ptr<SliderAttachment> gainKnobAttachment;
+    CosmicKnob posGainKnob{ "POSITIVE GAIN" };
+    std::unique_ptr<SliderAttachment> posGainAttachment;
+    
+    CosmicKnob negGainKnob{ "NEGATIVE GAIN" };
+    std::unique_ptr<SliderAttachment> negGainAttachment;
 
 //================================================================================================
         

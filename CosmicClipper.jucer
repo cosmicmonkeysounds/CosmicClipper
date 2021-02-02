@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="uSmhal" name="Cosmic Clipper" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" companyName="Cosmic Monkey Sounds">
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" companyName="Cosmic Monkey Sounds"
+              displaySplashScreen="1" pluginFormats="buildAU,buildStandalone,buildVST3"
+              version="0.1" pluginVST3Category="Distortion">
   <MAINGROUP id="z3ajxe" name="Cosmic Clipper">
     <GROUP id="{F46DC649-6A62-7737-CFA9-9983EB1946F0}" name="Source">
       <FILE id="YKwznC" name="LevelMeter.h" compile="0" resource="0" file="Source/LevelMeter.h"/>
