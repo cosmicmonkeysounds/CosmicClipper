@@ -16,12 +16,8 @@ struct Fifo
     
     void prepare( int numberOfChannels, int numberOfSamples )
     {
-    
         for( auto& buffer : buffers )
-        {
             buffer.setSize( numberOfChannels, numberOfSamples );
-        }
-        
     }
     
     bool push( const T& itemToAdd )
