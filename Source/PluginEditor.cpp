@@ -8,8 +8,10 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "Colours.h"
 
-//==============================================================================
+
+
 CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClipperAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
@@ -22,6 +24,7 @@ CosmicClipperAudioProcessorEditor::CosmicClipperAudioProcessorEditor (CosmicClip
 }
 
 
+
 CosmicClipperAudioProcessorEditor::~CosmicClipperAudioProcessorEditor()
 {
     setLookAndFeel (nullptr);
@@ -29,15 +32,21 @@ CosmicClipperAudioProcessorEditor::~CosmicClipperAudioProcessorEditor()
 }
 
 
+
 void CosmicClipperAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    
+    g.fillAll (CustomColours::Background());
 }
+
+
 
 void CosmicClipperAudioProcessorEditor::resized()
 {
-    panel.setBounds (getLocalBounds().reduced (50));
+    juce::Rectangle<int> bounds = getLocalBounds();
+    panel.setBounds (bounds.reduced (50));
 }
+
+
 
 void CosmicClipperAudioProcessorEditor::timerCallback()
 {

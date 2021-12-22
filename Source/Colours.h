@@ -20,6 +20,8 @@ enum Colours
 struct CustomColours
 {
     
+    const static juce::Colour Background() { return juce::Colour {18,  18,  18}; }
+    
     const static juce::Colour LightBlue()  { return juce::Colour {197, 198, 255}; }
     const static juce::Colour MediumBlue() { return juce::Colour {12,  27,  64};  }
     const static juce::Colour DarkBlue()   { return juce::Colour {7,   14,  31};  }

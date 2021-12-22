@@ -10,6 +10,10 @@
 #pragma once
 #include <JuceHeader.h>
 #include <memory>
+#include "Colours.h"
+#include "UserDrawnCurve.h"
+#include <vector>
+#include <utility>
 
 
 class CurveDrawingPanel : public juce::Component
@@ -17,63 +21,26 @@ class CurveDrawingPanel : public juce::Component
     
 public:
     
-    CurveDrawingPanel() { }
-    ~CurveDrawingPanel()
-    {
-
-    }
+    CurveDrawingPanel();
+    ~CurveDrawingPanel();
     
     
 private:
     
-    juce::Point<int> m_CurrentMousePosition = juce::Point<int> {0, 0};
+    juce::Point<int> m_CurrentMousePosition = juce::Point<int> (-1, -1);
     int width = 0, height = 0;
     
-    void resized() override
-    {
-        width  = getWidth();
-        height = getHeight();
-    }
+    std::vector<int> m_xyPairs;
+    juce::Path m_DrawnPath;
     
-    void paint (juce::Graphics& g) override
-    {
-        g.fillAll (juce::Colours::lightpink);
-        
-        
-        //if (m_CurrentMousePosition)
-        //{
-            g.setColour (juce::Colours::white);
-            g.drawSingleLineText (m_CurrentMousePosition.toString(), 50, 50);
-        //}
-        
-    }
+    UserDrawnCurve userDrawnCurve;
     
-    void mouseDown (const juce::MouseEvent& event) override
-    {
-        m_CurrentMousePosition = event.getPosition();
-        this->repaint();
-    }
+    void resized() override;
+    void paint (juce::Graphics& g) override;
     
-    void mouseUp (const juce::MouseEvent& event) override
-    {
-        //m_CurrentMousePosition = nullptr;
-        this->repaint();
-    }
-    
-    void mouseDrag (const juce::MouseEvent& event) override
-    {
-        m_CurrentMousePosition = event.getPosition();
-        
-        int mouseX = m_CurrentMousePosition.x;
-        int mouseY = m_CurrentMousePosition.y;
-        
-        if (mouseX < 0 || mouseY < 0 || mouseX > width || mouseY > height)
-        {
-            
-        }
-        
-        this->repaint();
-    }
+    void mouseDown (const juce::MouseEvent& event) override;
+    void mouseUp   (const juce::MouseEvent& event) override;
+    void mouseDrag (const juce::MouseEvent& event) override;
     
 };
 
