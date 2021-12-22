@@ -13,161 +13,24 @@
 CosmicClipperAudioProcessor::CosmicClipperAudioProcessor()
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-     : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                      #endif
-                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                     #endif
-                       ), // end of AudioProcessor initialization
-
-        parametersTreeState( *this, nullptr, juce::Identifier("CosmicClipper"), //createParameters() )
-                   {
-                        std::make_unique<juce::AudioParameterFloat>
-                        (
-                            "positive threshold", // parameter ID
-                            "Positive Threshold", // parameter name
-                            0.f,                  // min value
-                            1.f,                  // max value
-                            1.f                   // default value
-                        ),
-
-                        std::make_unique<juce::AudioParameterFloat>
-                        (
-                            "negative threshold",
-                            "Negative Threshold",
-                            0.f,
-                            1.f,
-                            1.f
-                        ),
-
-                        std::make_unique<juce::AudioParameterBool>
-                        (
-                            "unlinked thresholds",
-                            "Unlinked Thresholds",
-                            true
-                        ),
-            
-                        std::make_unique<juce::AudioParameterBool>
-                        (
-                            "absolute",
-                            "Absolute",
-                            false
-                        ),
-        
-                         std::make_unique<juce::AudioParameterBool>
-                         (
-                             "relative",
-                             "Relative",
-                             false
-                         ),
-            
-                        std::make_unique<juce::AudioParameterBool>
-                        (
-                            "link algorithms",
-                            "Link Algorithms",
-                            true
-                        ),
-            
-                        std::make_unique<juce::AudioParameterFloat>
-                        (
-                            "positive algorithm modifier",
-                            "Positive Algorithm Modifier",
-                            0.f, 1.f, 0.f
-                        ),
-            
-                        std::make_unique<juce::AudioParameterFloat>
-                        (
-                            "negative algorithm modifier",
-                            "Negative Algorithm Modifier",
-                            0.f, 1.f, 0.f
-                        ),
-                        
-                        std::make_unique<juce::AudioParameterFloat>
-                        (
-                            "positive algorithm",
-                            "Positive Algorithm",
-                            juce::NormalisableRange<float>( 0.f, 3.f, 1.f ),
-                            0.f
-                        ),
-            
-                        std::make_unique<juce::AudioParameterFloat>
-                        (
-                            "negative algorithm",
-                            "Negative Algorithm",
-                            juce::NormalisableRange<float>( 0.f, 3.f, 1.f ),
-                            0.f
-                        ),
-            
-                        std::make_unique<juce::AudioParameterFloat>
-                        (
-                            "pos gain",
-                            "Positive Gain",
-                            1.f,
-                            10.f,
-                            1.f
-                        ),
-            
-                        std::make_unique<juce::AudioParameterFloat>
-                        (
-                            "neg gain",
-                            "Negative Gain",
-                            1.f,
-                            10.f,
-                            1.f
-                        ),
-            
-                        std::make_unique<juce::AudioParameterFloat>
-                        (
-                            "input level",
-                            "Input Level",
-                            juce::NormalisableRange<float>( juce::Decibels::decibelsToGain(NEGATIVE_INFINITY_DB),
-                                                            juce::Decibels::decibelsToGain(MAX_DB),
-                                                            0.0000001, 0.1 ),
-                         
-                            juce::Decibels::decibelsToGain( -3.f )
-                        ),
-            
-                        std::make_unique<juce::AudioParameterFloat>
-                        (
-                            "output level",
-                            "Output Level",
-                            juce::NormalisableRange<float>( juce::Decibels::decibelsToGain(NEGATIVE_INFINITY_DB),
-                                                            juce::Decibels::decibelsToGain(MAX_DB),
-                                                            0.0000001, 0.1 ),
-                         
-                            juce::Decibels::decibelsToGain( -3.f )
-                        )
-            
-                   }) // end of parameter (AudioValueTree) initialization
+     : AudioProcessor (     BusesProperties()
+                            #if ! JucePlugin_IsMidiEffect
+                                #if ! JucePlugin_IsSynth
+                                .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
+                                #endif
+                            .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
+                            #endif
+                       )
 #endif
-                // for oscilloscope
-            , scopeDataCollector( scopeDataQueue )
+        
 {
-    posThreshParam       = parametersTreeState.getRawParameterValue( "positive threshold" );
-    negThreshParam       = parametersTreeState.getRawParameterValue( "negative threshold" );
-    
-    linkThreshParam      = parametersTreeState.getRawParameterValue( "unlinked thresholds" );
-    absoluteParam        = parametersTreeState.getRawParameterValue( "absolute" );
-    relativeParam        = parametersTreeState.getRawParameterValue( "relative" );
-    algoLinkParam        = parametersTreeState.getRawParameterValue( "link algorithms" );
-    
-    inputLevelParam      = parametersTreeState.getRawParameterValue( "input level" );
-    outputLevelParam     = parametersTreeState.getRawParameterValue( "output level" );
-    posGainParam         = parametersTreeState.getRawParameterValue( "pos gain" );
-    negGainParam         = parametersTreeState.getRawParameterValue( "neg gain" );
-    
-    posAlgoModifierParam = parametersTreeState.getRawParameterValue( "positive algorithm modifier" );
-    negAlgoModifierParam = parametersTreeState.getRawParameterValue( "negative algorithm modifier" );
-    
-    posAlgoParam         = parametersTreeState.getRawParameterValue( "positive algorithm" );
-    negAlgoParam         = parametersTreeState.getRawParameterValue( "negative algorithm" );
+
     
 #if SINE_TEST == 1
     const std::function<float(float)> sineFunc = [](float deg){ return std::sin(deg); };
     testOscillator.initialise( sineFunc, 256 );
 #endif
+    
 }
 
 CosmicClipperAudioProcessor::~CosmicClipperAudioProcessor()
@@ -242,7 +105,7 @@ void CosmicClipperAudioProcessor::prepareToPlay (double sampleRate, int samplesP
     
 #if SINE_TEST == 1
 
-    testOscillator.prepare({ sampleRate,
+    testOscillator.prepare ({ sampleRate,
                              static_cast<juce::uint32>(samplesPerBlock),
                              static_cast<juce::uint32>(getMainBusNumOutputChannels())
                         });
@@ -286,8 +149,8 @@ bool CosmicClipperAudioProcessor::isBusesLayoutSupported (const BusesLayout& lay
 void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
+    int totalNumInputChannels  = getTotalNumInputChannels();
+    int totalNumOutputChannels = getTotalNumOutputChannels();
     int numSamples = buffer.getNumSamples();
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
@@ -296,79 +159,25 @@ void CosmicClipperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
     
     
 #if SINE_TEST == 1
-    testOscillator.setFrequency( 60.f );
+    testOscillator.setFrequency (60.f);
     
-    auto* leftBuffer  = buffer.getWritePointer(0);
-    auto* rightBuffer = buffer.getWritePointer(1);
+    auto* leftBuffer  = buffer.getWritePointer (0);
+    auto* rightBuffer = buffer.getWritePointer (1);
     
-    for( int sample = 0; sample < numSamples; ++sample )
+    for (int sample = 0; sample < numSamples; ++sample)
     {
-        auto currentSample = (float) std::sin(currentAngle);
+        float currentSample = (float) std::sin (currentAngle);
         currentAngle += angleDelta;
         rightBuffer[sample] = leftBuffer[sample] = currentSample;
     }
 #endif
     
-    buffer.applyGain( currInputLevel );
-    inputFifo.push( buffer );
     
-    posClippingType = (ClippingTypes) posAlgoParam->load();
-    setPosAlgo(posClippingType);
     
-    negClippingType = (ClippingTypes) negAlgoParam->load();
-    setNegAlgo(negClippingType);
     
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        float* channelData = buffer.getWritePointer (channel);
-
-        for( int samplePos = 0; samplePos < numSamples; ++samplePos )
-        {
-            currSampleRatio = samplePos / numSamples;
-            
-            rampParameter( *posThreshParam, currPosThresh, prevPosThresh );
-            rampParameter( -(*negThreshParam), currNegThresh, prevNegThresh );
-            rampParameter( *inputLevelParam, currInputLevel, prevInputLevel );
-            rampParameter( *outputLevelParam, currOutputLevel, prevOutputLevel );
-            rampParameter( *posGainParam, currPosGain, prevPosGain );
-            rampParameter( *negGainParam, currNegGain, prevNegGain );
-            
-            //=======================================================================================
-            // Transfer Function gets applied to sample
-            
-            float& sample = channelData[samplePos];
-            
-            if( sample >= 0.f )
-            {
-                sample *= currPosGain;
-                posAlgo( sample );
-                
-                if( sample > 1.f )
-                    sample = 1.f;
-            }
-                
-            else
-            {
-                sample *= currNegGain;
-                negAlgo( sample );
-                
-                if( sample < -1.f )
-                    sample = -1.f;
-            }
-            
-            //=======================================================================================
-            
-        } // end of sample for loop
-    } // end of channel for loop
-    
-    scopeFifo.push( buffer );
-    scopeDataCollector.process( buffer.getReadPointer(0), (size_t)buffer.getNumSamples() );
-    
-    buffer.applyGain( currOutputLevel );
-    outputFifo.push( buffer );
     
 #if SINE_TEST == 1
-    //buffer.clear();
+    buffer.clear();
 #endif
     
 } // end of process block
@@ -387,30 +196,35 @@ juce::AudioProcessorEditor* CosmicClipperAudioProcessor::createEditor()
 //==============================================================================
 void CosmicClipperAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    auto state = parametersTreeState.copyState();
-    std::unique_ptr<juce::XmlElement> xml( state.createXml() );
-    copyXmlToBinary( *xml, destData );
+//    auto state = parametersTreeState.copyState();
+//    std::unique_ptr<juce::XmlElement> xml( state.createXml() );
+//    copyXmlToBinary( *xml, destData );
 }
 
 void CosmicClipperAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    std::unique_ptr<juce::XmlElement> xmlState( getXmlFromBinary(data, sizeInBytes) );
-    
-    if( xmlState.get() != nullptr )
-    {
-        if( xmlState->hasTagName(parametersTreeState.state.getType()) )
-        {
-            parametersTreeState.replaceState( juce::ValueTree::fromXml(*xmlState) );
-        }
-    }
+//    std::unique_ptr<juce::XmlElement> xmlState( getXmlFromBinary(data, sizeInBytes) );
+//
+//    if( xmlState.get() != nullptr )
+//    {
+//        if( xmlState->hasTagName(parametersTreeState.state.getType()) )
+//        {
+//            parametersTreeState.replaceState( juce::ValueTree::fromXml(*xmlState) );
+//        }
+//    }
 }
+
+
 
 //==============================================================================
 // This creates new instances of the plugin..
+//==============================================================================
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new CosmicClipperAudioProcessor();
 }
+
+
 
 
 //juce::AudioProcessorValueTreeState::ParameterLayout CosmicClipperAudioProcessor::createParameters()

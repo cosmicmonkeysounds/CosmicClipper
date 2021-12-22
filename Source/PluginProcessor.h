@@ -8,7 +8,7 @@
 
 #pragma once
 
-#define SINE_TEST 0
+#define SINE_TEST 1
 
 #include <JuceHeader.h>
 
@@ -20,8 +20,15 @@
 
 class CosmicClipperAudioProcessor  : public juce::AudioProcessor
 {
+    
 public:
-    //==============================================================================
+
+    //------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
+    // JUCE GENERATED
+    //------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
+
     CosmicClipperAudioProcessor();
     ~CosmicClipperAudioProcessor() override;
 
@@ -61,168 +68,12 @@ public:
     // for pushing shit to graphics thread safely
     Fifo<juce::AudioBuffer<float>> scopeFifo, inputFifo, outputFifo;
     
-    //==============================================================================
-    // for keeping track of the gui elements and their values
-    juce::AudioProcessorValueTreeState parametersTreeState;
     
-    //==============================================================================
-    // holds all transfer function info
-    enum ClippingTypes
-    {
-        HardClipping = 0,
-        Tanh,
-        Sinx,
-        Cosx
-    };
-    
-    
-    //==============================================================================
-    // list of clipping functions
-    std::vector< std::function<void(float&)> > transferFuncs
-    {
-        //==============================================================================
-        // 0. HardClipping
-        //==============================================================================
-        [this]( float& currentSample )
-        {
-            if( currentSample > currPosThresh )
-            {
-                float diff = (currentSample - currPosThresh) * posAlgoModifierParam->load();
-                currentSample -= diff;
-            }
-                
-            if( currentSample < currNegThresh )
-            {
-                float diff = (currentSample - currNegThresh) * negAlgoModifierParam->load();
-                currentSample -= diff;
-            }
-        },
-        
-        //==============================================================================
-        // 1. Tanh
-        //==============================================================================
-        [this]( float& currentSample )
-        {
-            if( currentSample > currPosThresh )
-            {
-                float mappedVal = juce::jmap( posAlgoModifierParam->load(), 0.f, 1.f, 1.f, 10.f );
-                currentSample = std::tanh( currentSample * mappedVal );
-            }
-                
-            if( currentSample < currNegThresh )
-            {
-                float mappedVal = juce::jmap( negAlgoModifierParam->load(), 0.f, 1.f, 1.f, 10.f );
-                currentSample = std::tanh( currentSample * mappedVal );
-            }
-        },
-        
-        //==============================================================================
-        // 2. Sinx
-        //==============================================================================
-        [this]( float& currentSample )
-        {
-            if( currentSample > currPosThresh )
-            {
-                currentSample /= currPosGain;
-                float g = juce::jmap( currPosGain, 1.f, 10.f, 0.f, 1.f );
-                float mod = juce::jmap( posAlgoModifierParam->load(), 0.f, 1.f, 0.f, 100.f );
-                currentSample -= ( g * std::sin(mod * currentSample) );
-            }
-                
-            if( currentSample < currNegThresh )
-            {
-                currentSample /= currNegGain;
-                float g = juce::jmap( currNegGain, 1.f, 10.f, 0.f, 1.f );
-                float mod = juce::jmap( negAlgoModifierParam->load(), 0.f, 1.f, 1.f, 100.f );
-                currentSample -= ( g * std::sin(mod * currentSample) );
-            }
-
-        },
-        
-        //==============================================================================
-        // 3. Cosx
-        //==============================================================================
-        [this]( float& currentSample )
-        {
-            if( currentSample > currPosThresh )
-            {
-                currentSample /= currPosGain;
-                float g = juce::jmap( currPosGain, 1.f, 10.f, 0.1f, 1.f );
-                float mod = juce::jmap( posAlgoModifierParam->load(), 0.f, 1.f, 0.f, 100.f );
-                currentSample *= ( g * std::cos(mod * currentSample) );
-            }
-                
-            if( currentSample < currNegThresh )
-            {
-                currentSample /= currNegGain;
-                float g = juce::jmap( currNegGain, 1.f, 10.f, 0.1f, 1.f );
-                float mod = juce::jmap( negAlgoModifierParam->load(), 0.f, 1.f, 1.f, 100.f );
-                currentSample *= ( g * std::cos(mod * currentSample) );
-            }
-        }
-        
-    };
-    
-    ClippingTypes posClippingType, negClippingType = HardClipping;
-    
-    std::function<void(float&)> posAlgo{transferFuncs[HardClipping]};
-    std::function<void(float&)> negAlgo{posAlgo};
-    
-    void setPosAlgo( ClippingTypes type ) { posAlgo = transferFuncs[type]; }
-    void setNegAlgo( ClippingTypes type ) { negAlgo = transferFuncs[type]; }
-    
-    AudioBufferQueue<float>& getAudioBufferQueue() { return scopeDataQueue; }
-    
-    float getPosThresh() { return *posThreshParam; }
-    float getNegThresh() { return *negThreshParam; }
-    
-    bool isThreshFree()      { return *linkThreshParam < 0.5f ? false : true; }
-    bool isThreshAbsolute()  { return *absoluteParam   < 0.5f ? false : true; }
-    bool isThreshRelative()  { return *relativeParam   < 0.5f ? false : true; }
-    
-    bool isAlgoLinked()      { return *algoLinkParam < 0.f ? false : true; }
-    
-    int getPosAlgoType() { return (int)posAlgoParam->load(); }
-    int getNegAlgoType() { return (int)negAlgoParam->load(); }
     
 private:
     
-    //==============================================================================
-    // Visualiser stuff
-    //==============================================================================
     
-    AudioBufferQueue<float> scopeDataQueue;
-    ScopeDataCollector<float> scopeDataCollector;
-    
-    //==============================================================================
-    // the cross-thread parameters that get attached to the
-    // parametersTreeState in PluginProcessor.cpp ctor
-    std::atomic<float> *posThreshParam  = nullptr, *negThreshParam   = nullptr,
-                       *linkThreshParam = nullptr, *absoluteParam    = nullptr, *relativeParam = nullptr, *algoLinkParam = nullptr,
-                       *inputLevelParam = nullptr, *outputLevelParam = nullptr, *posGainParam  = nullptr, *negGainParam  = nullptr,
-                       *posAlgoParam    = nullptr, *negAlgoParam     = nullptr,
-                       *posAlgoModifierParam = nullptr, *negAlgoModifierParam = nullptr;
-    
-    std::atomic<bool> linkedThreshold{false};
-    
-    //==============================================================================
-    // for calculating smooth ramping in processBlock()
-    int currSampleRatio;
-    
-    void rampParameter( float param, float& curr, float& prev )
-    {
-        curr = param;
-        
-        if( curr != prev )
-            curr += (prev - curr) * currSampleRatio;
-        
-        else
-            prev = curr;
-    }
-    
-    float currPosThresh{1.f},   prevPosThresh{1.f},  currNegThresh{-1.f},  prevNegThresh{-1.f},
-          currInputLevel{1.f},  prevInputLevel{1.f}, currOutputLevel{1.f}, prevOutputLevel{1.f},
-          currPosGain{1.f},     prevPosGain{1.f},    currNegGain{1.f},     prevNegGain{1.f};
+
 
 //==============================================================================
 // for testing purposes 
