@@ -3,32 +3,46 @@
 <JUCERPROJECT id="uSmhal" name="Cosmic Clipper" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" companyName="Cosmic Monkey Sounds"
               displaySplashScreen="1" pluginFormats="buildAU,buildStandalone,buildVST3"
-              version="0.1" pluginVST3Category="Distortion">
+              version="0.2" pluginVST3Category="Distortion" companyWebsite="www.cosmicmonkeysounds.com">
   <MAINGROUP id="z3ajxe" name="Cosmic Clipper">
     <GROUP id="{F46DC649-6A62-7737-CFA9-9983EB1946F0}" name="Source">
-      <FILE id="WVmvNI" name="MyLookAndFeel.h" compile="0" resource="0" file="Source/MyLookAndFeel.h"/>
-      <FILE id="uw3qry" name="Colours.h" compile="0" resource="0" file="Source/Colours.h"/>
-      <FILE id="eWBPCT" name="CosmicKnob.h" compile="0" resource="0" file="Source/CosmicKnob.h"/>
-      <FILE id="DfMLOf" name="CosmicSlider.h" compile="0" resource="0" file="Source/CosmicSlider.h"/>
-      <FILE id="c8aw7s" name="CurveDrawingPanel.h" compile="0" resource="0"
-            file="Source/CurveDrawingPanel.h"/>
-      <FILE id="l2TaEG" name="CurveDrawingPanel.cpp" compile="1" resource="0"
-            file="Source/CurveDrawingPanel.cpp"/>
-      <FILE id="YKwznC" name="LevelMeter.h" compile="0" resource="0" file="Source/LevelMeter.h"/>
-      <FILE id="G2ePEY" name="ScopeComponent.h" compile="0" resource="0"
-            file="Source/ScopeComponent.h"/>
-      <FILE id="LH7fMv" name="Fifo.h" compile="0" resource="0" file="Source/Fifo.h"/>
-      <FILE id="rXPyN8" name="PluginProcessor.cpp" compile="1" resource="0"
-            file="Source/PluginProcessor.cpp"/>
-      <FILE id="vTQ1ME" name="PluginProcessor.h" compile="0" resource="0"
-            file="Source/PluginProcessor.h"/>
-      <FILE id="mQ4mNi" name="PluginEditor.cpp" compile="1" resource="0"
-            file="Source/PluginEditor.cpp"/>
-      <FILE id="LTArN6" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
-      <FILE id="HNumui" name="UserDrawnCurve.cpp" compile="1" resource="0"
-            file="Source/UserDrawnCurve.cpp"/>
-      <FILE id="KXtzvu" name="UserDrawnCurve.h" compile="0" resource="0"
-            file="Source/UserDrawnCurve.h"/>
+      <GROUP id="{7D16D88D-C214-58B7-BCBC-8D4440668683}" name="CurveDrawing">
+        <FILE id="lCuWYB" name="Cursor.cpp" compile="1" resource="0" file="Source/Cursor.cpp"/>
+        <FILE id="qd5Rz3" name="Cursor.h" compile="0" resource="0" file="Source/Cursor.h"/>
+        <FILE id="lEibup" name="CurvePoint.cpp" compile="1" resource="0" file="Source/CurvePoint.cpp"/>
+        <FILE id="HQ0X4w" name="CurvePoint.h" compile="0" resource="0" file="Source/CurvePoint.h"/>
+        <FILE id="c8aw7s" name="CurveDrawingPanel.h" compile="0" resource="0"
+              file="Source/CurveDrawingPanel.h"/>
+        <FILE id="l2TaEG" name="CurveDrawingPanel.cpp" compile="1" resource="0"
+              file="Source/CurveDrawingPanel.cpp"/>
+        <FILE id="cyRKEz" name="DrawnPath.cpp" compile="1" resource="0" file="Source/DrawnPath.cpp"/>
+        <FILE id="tlLsXQ" name="DrawnPath.h" compile="0" resource="0" file="Source/DrawnPath.h"/>
+        <FILE id="HNumui" name="UserDrawnCurve.cpp" compile="1" resource="0"
+              file="Source/UserDrawnCurve.cpp"/>
+        <FILE id="KXtzvu" name="UserDrawnCurve.h" compile="0" resource="0"
+              file="Source/UserDrawnCurve.h"/>
+      </GROUP>
+      <GROUP id="{E30E0DB2-AE7E-79DF-8810-B7248BCEE798}" name="DSP">
+        <FILE id="LH7fMv" name="Fifo.h" compile="0" resource="0" file="Source/Fifo.h"/>
+      </GROUP>
+      <GROUP id="{B12ADE4D-6E4C-743B-71CC-931853FE64ED}" name="Framework">
+        <FILE id="rXPyN8" name="PluginProcessor.cpp" compile="1" resource="0"
+              file="Source/PluginProcessor.cpp"/>
+        <FILE id="vTQ1ME" name="PluginProcessor.h" compile="0" resource="0"
+              file="Source/PluginProcessor.h"/>
+        <FILE id="mQ4mNi" name="PluginEditor.cpp" compile="1" resource="0"
+              file="Source/PluginEditor.cpp"/>
+        <FILE id="LTArN6" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+      </GROUP>
+      <GROUP id="{AC5168D9-5C1F-0E87-0DA2-A7D5A2D7284B}" name="UI">
+        <FILE id="YKwznC" name="LevelMeter.h" compile="0" resource="0" file="Source/LevelMeter.h"/>
+        <FILE id="G2ePEY" name="ScopeComponent.h" compile="0" resource="0"
+              file="Source/ScopeComponent.h"/>
+        <FILE id="eWBPCT" name="CosmicKnob.h" compile="0" resource="0" file="Source/CosmicKnob.h"/>
+        <FILE id="DfMLOf" name="CosmicSlider.h" compile="0" resource="0" file="Source/CosmicSlider.h"/>
+        <FILE id="WVmvNI" name="MyLookAndFeel.h" compile="0" resource="0" file="Source/MyLookAndFeel.h"/>
+        <FILE id="uw3qry" name="Colours.h" compile="0" resource="0" file="Source/Colours.h"/>
+      </GROUP>
     </GROUP>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>

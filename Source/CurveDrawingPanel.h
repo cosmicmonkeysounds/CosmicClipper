@@ -14,6 +14,9 @@
 #include "UserDrawnCurve.h"
 #include <vector>
 #include <utility>
+#include "DrawnPath.h"
+#include <map>
+#include "CurvePoint.h"
 
 
 class CurveDrawingPanel : public juce::Component
@@ -32,6 +35,12 @@ private:
     
     std::vector<int> m_xyPairs;
     juce::Path m_DrawnPath;
+    juce::Point<int> m_FurthestPoint;
+    
+    CurvePoint cp;
+    
+    std::map<juce::String, CurvePoint> m_PointMap;
+    
     
     UserDrawnCurve userDrawnCurve;
     

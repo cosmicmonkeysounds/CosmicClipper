@@ -35,7 +35,7 @@ CosmicClipperAudioProcessorEditor::~CosmicClipperAudioProcessorEditor()
 
 void CosmicClipperAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    g.fillAll (CustomColours::Background());
+    g.fillAll (CustomColours::DarkBlue());
 }
 
 
