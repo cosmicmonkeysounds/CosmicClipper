@@ -14,21 +14,21 @@ template<typename T>
 struct Fifo
 {
     
-    void prepare( int numberOfChannels, int numberOfSamples )
+    void prepare (int numberOfChannels, int numberOfSamples)
     {
     
-        for( auto& buffer : buffers )
+        for (auto& buffer : buffers)
         {
-            buffer.setSize( numberOfChannels, numberOfSamples );
+            buffer.setSize (numberOfChannels, numberOfSamples);
         }
         
     }
     
-    bool push( const T& itemToAdd )
+    bool push (const T& itemToAdd)
     {
-        auto scopedWriter = fifo.write(1);
+        auto scopedWriter = fifo.write (1);
         
-        if( scopedWriter.blockSize1 >= 1 )
+        if (scopedWriter.blockSize1 >= 1)
         {
             auto& buffer = buffers[scopedWriter.startIndex1];
             buffer = itemToAdd;
@@ -38,11 +38,11 @@ struct Fifo
         return false;
     }
     
-    bool pull( T& itemToPull )
+    bool pull (T& itemToPull)
     {
         auto scopedReader = fifo.read(1);
         
-        if( scopedReader.blockSize1 >= 1 )
+        if (scopedReader.blockSize1 >= 1)
         {
             auto& buffer = buffers[scopedReader.startIndex1];
             itemToPull = buffer;
@@ -59,3 +59,5 @@ private:
     juce::AbstractFifo fifo{Size};
     
 };
+
+
