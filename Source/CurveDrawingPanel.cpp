@@ -52,7 +52,7 @@ void CurveDrawingPanel::resized()
         xyPairs[i] = m_xyPairs[i];
     }
     
-    m_xyPairs = std::move (xyPairs);
+    m_xyPairs = std:: move (xyPairs);
     
     //userDrawnCurve.setBounds (bounds);
 }
@@ -64,9 +64,6 @@ void CurveDrawingPanel::paint (juce::Graphics& g)
     
     if (contains (m_CurrentMousePosition))
     {
-
-        g.drawSingleLineText (m_CurrentMousePosition.toString(), 50, 50);
-
         m_xyPairs[m_CurrentMousePosition.x] = m_CurrentMousePosition.y;
     }
 

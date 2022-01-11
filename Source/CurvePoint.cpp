@@ -12,7 +12,7 @@
 #include "Colours.h"
 
 
-juce::Point<int> CurvePoint::Size = {50, 50};
+juce::Point<int> CurvePoint::Size = {25, 25};
 
 
 //----------------------------------------------------------------------------------------------
@@ -53,10 +53,13 @@ CurvePoint& CurvePoint::operator= (const CurvePoint&&)
 
 void CurvePoint::paint (juce::Graphics& g)
 {
-    g.setColour (CustomColours::LightPink());
-    g.fillAll();
+    juce::Rectangle<float> r = {Size.x * 0.8f, Size.y * 0.8f};
     
-    DBG ("CurvePoint::paint");
+    g.setColour (CustomColours::DarkPink());
+    g.fillEllipse (r);
+    
+    g.setColour (CustomColours::LightPink());
+    g.drawEllipse (r, 2.0f);
 }
 
 void CurvePoint::resized()
@@ -72,13 +75,13 @@ void CurvePoint::resized()
 
 void CurvePoint::mouseEnter (const juce::MouseEvent& event)
 {
-    
+    DBG ("waz uh cracka");
 }
 
 
 void CurvePoint::mouseExit (const juce::MouseEvent& event)
 {
-    
+    DBG ("c u lata cracka");
 }
 
 
